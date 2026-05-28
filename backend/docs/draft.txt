@@ -1,0 +1,237 @@
+ProcurementContract
+
+enum ContractPhase {
+    REGISTRATION,
+    ORDERING,
+    ALLOCATION,
+    DELIVERY,
+    COMPLETED
+}
+
+struct Demand {
+    uint256 requestedQuantity;
+    uint256 requestedDeliveryAt;
+
+    uint16 priceWeight;
+    uint16 leadTimeWeight;
+    uint16 defectWeight;
+
+    uint16 delayPenaltyRate;
+    uint16 defectPenaltyRate;
+}
+
+struct SupplierQuotation {
+    uint256 unitPrice;
+
+    uint256 minSupplyQuantity;
+    uint256 maxSupplyQuantity;
+
+    uint16 maxDefectRate;
+    uint16 maxLeadTimeDays;
+}
+
+struct BuyerCriteria {
+    uint256 minPurchaseQuantity;
+    uint16 maxAllocationPercent;
+}
+
+struct AllocationResult {
+    uint256 score;
+    uint256 allocatedQuantity;
+    uint256 estimatedAmount;
+}
+
+struct OrderFulfillment {
+    uint256 deliveredAt;
+    uint16 defectRate;
+
+    uint256 paymentAmount;
+
+    bool isPaid;
+}
+
+state variables:
+
+address public system;
+address public buyer;
+address public customer;
+
+ContractPhase public currentPhase;
+
+Demand public demand;
+
+address[] public suppliers;
+
+mapping(address => bool) public registeredSuppliers;
+
+mapping(address => SupplierQuotation)
+    public supplierQuotations;
+
+mapping(address => BuyerCriteria)
+    public buyerCriteria;
+
+mapping(address => AllocationResult)
+    public allocationResults;
+
+mapping(address => OrderFulfillment)
+    public orderFulfillments;
+
+uint256 public requiredDepositAmount;
+
+mapping(address => uint256)
+    public withdrawableBalances;
+
+modifiers:
+
+onlySystem
+onlyBuyer
+onlyCustomer
+onlySupplier
+
+atPhase(ContractPhase phase)
+
+events:
+
+event ContractPhaseChanged(
+    ContractPhase newPhase
+);
+
+event CustomerRegistered(
+    address indexed customer
+);
+
+event SupplierRegistered(
+    address indexed supplier
+);
+
+event DemandCreated();
+
+event SupplierQuotationSubmitted(
+    address indexed supplier
+);
+
+event BuyerCriteriaConfigured(
+    address indexed supplier
+);
+
+event AllocationResultFinalized(
+    address indexed supplier
+);
+
+event BuyerDepositConfirmed(
+    uint256 depositedAmount
+);
+
+event OrderFulfillmentRecorded(
+    address indexed supplier
+);
+
+event SupplierPaymentReleased(
+    address indexed supplier,
+    uint256 paidAmount
+);
+
+event ContractCompleted();
+
+functions:
+
+addCustomer(address customer)
+    onlyBuyer
+    atPhase(ContractPhase.REGISTRATION)
+
+addSupplier(address supplier)
+    onlyBuyer
+    atPhase(ContractPhase.REGISTRATION)
+
+startOrderingPhase()
+    onlyBuyer
+
+createDemand(
+    uint256 requestedQuantity,
+    uint256 requestedDeliveryAt,
+
+    uint16 priceWeight,
+    uint16 leadTimeWeight,
+    uint16 defectWeight,
+
+    uint16 delayPenaltyRate,
+    uint16 defectPenaltyRate
+)
+    onlyCustomer
+    atPhase(ContractPhase.ORDERING)
+
+submitSupplierQuotation(
+    uint256 unitPrice,
+
+    uint256 minSupplyQuantity,
+    uint256 maxSupplyQuantity,
+
+    uint16 maxDefectRate,
+    uint16 maxLeadTimeDays
+)
+    onlySupplier
+    atPhase(ContractPhase.ORDERING)
+
+startAllocationPhase()
+    onlyBuyer
+
+configureBuyerCriteria(
+    address supplier,
+    uint256 minPurchaseQuantity,
+    uint16 maxAllocationPercent
+)
+    onlyBuyer
+    atPhase(ContractPhase.ALLOCATION)
+
+finalizeAllocationResult(
+    address supplier,
+    uint256 score,
+    uint256 allocatedQuantity,
+    uint256 estimatedAmount
+)
+    onlySystem
+    atPhase(ContractPhase.ALLOCATION)
+
+deposit()
+    payable
+    onlyBuyer
+    atPhase(ContractPhase.ALLOCATION)
+
+startDeliveryPhase()
+    onlyBuyer
+
+recordOrderFulfillment(
+    address supplier,
+    uint256 deliveredAt,
+    uint16 defectRate,
+    uint256 paymentAmount
+)
+    onlyBuyer
+    atPhase(ContractPhase.DELIVERY)
+
+releaseSupplierPayment(address supplier)
+    onlyBuyer
+    atPhase(ContractPhase.DELIVERY)
+
+completeContract()
+    onlyBuyer
+
+
+
+SourcingSystem
+
+states:
+
+
+
+Demand
+Draft --> Submitted --> Assigned --> (Rejected --> Submitted) --> Approved --> Contract Created
+
+Contract
+Draft openRegistration()--> Opened closeRegistration()--> Closed deploy(address: string, externalId: string)--> Initializing requestCustomerToConfirmContract()--> Waiting Customer Confirmation markCustomerConfirmed()--> Customer Confirmed requestSuppliersToConfirmQuotation()--> Waiting Suppliers Confirmation markSuppliersConfirmed--> Suppliers Confirmed startBuyerStatement()--> Waiting Buyer Statement markBuyerStated()--> Buyer Stated markAllocated(requiredDepositAmount)--> Allocated markDeposited()--> Deposited markExecuting()-->Executing startSettling()--> Settling finish()--> Finished
+
+Supplier Constraint
+Draft submit()--> Quotation Submitted reject(reason)--> (Quotation Rejected submit()--> Quotation Submitted) approved()--> Quotation Approved requestSupplierToConfirmQuotation()--> Waiting Supplier Confirm Quotation markQuotationConfirmed()--> Quotation Confirmed updateBuyerCriteria(criteria: BuyerCriteria)--> Buyer Stated markConstraintCompleted()--> Completed
+
+Order Fulfillment
+Created startDelivery()--> Delivering markDelivered(deliveredDate)--> Delivered startInspecting()--> Inspecting markInspected(defectRate)--> Inspected requestPayment(requiredPaymentAmount)--> Awaiting Payment markPaid()--> Paid

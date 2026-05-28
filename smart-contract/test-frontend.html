@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procurement & Sourcing System - Full Test Suite</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            background: #f0f2f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 24px;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.25rem;
+        }
+        .sub {
+            color: #475569;
+            margin-bottom: 2rem;
+            border-left: 4px solid #3b82f6;
+            padding-left: 1rem;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            transition: all 0.2s;
+        }
+        .card h2 {
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.4rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+        }
+        .badge {
+            background: #3b82f6;
+            color: white;
+            font-size: 0.7rem;
+            border-radius: 40px;
+            padding: 2px 10px;
+        }
+        .flex-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        .step-panel {
+            flex: 1;
+            min-width: 260px;
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+        }
+        button {
+            background: #1e293b;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.8rem;
+            margin: 4px 6px 4px 0;
+        }
+        button.primary {
+            background: #3b82f6;
+        }
+        button.success {
+            background: #10b981;
+        }
+        button.warning {
+            background: #f59e0b;
+        }
+        button.danger {
+            background: #ef4444;
+        }
+        button:hover {
+            filter: brightness(0.92);
+            transform: translateY(-1px);
+        }
+        input, select {
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            margin: 6px 8px 6px 0;
+            font-size: 0.8rem;
+            width: 160px;
+        }
+        .log-area {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 20px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            border-bottom: 1px solid #334155;
+            padding: 6px 0;
+            font-family: monospace;
+        }
+        .status {
+            font-size: 0.8rem;
+            background: #e6f0ff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        hr {
+            margin: 1rem 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        th, td {
+            text-align: left;
+            padding: 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .info-text {
+            color: #2563eb;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📦 ProcurementContract & SourcingSystem</h1>
+    <div class="sub">Full lifecycle test: Register, Demand, Quotation, Order, Delivery, Inspection, Payment</div>
+
+    <div class="card">
+        <h2>🔧 1. Environment Setup (Hardhat Simulation)</h2>
+        <div class="flex-row">
+            <div class="step-panel">
+                <strong>🧪 Test Accounts</strong><br>
+                <button id="loadAccountsBtn" class="primary">📋 Load Accounts</button>
+                <div id="accountInfo" style="margin-top: 12px; font-size:0.75rem;"></div>
+            </div>
+            <div class="step-panel">
+                <strong>⚙️ Deploy SourcingSystem</strong><br>
+                <button id="deploySystemBtn" class="success">🚀 Deploy SourcingSystem</button>
+                <div id="systemAddr" style="margin-top:8px; word-break:break-all;"></div>
+            </div>
+            <div class="step-panel">
+                <strong>📄 Create Procurement Contract (via SourcingSystem)</strong><br>
+                <input type="text" id="externalIdInput" placeholder="External ID (bytes32)" value="0x70726f637572656d656e74310000000000000000000000000000000000000000">
+                <input type="text" id="buyerAddrInput" placeholder="Buyer address">
+                <button id="createContractBtn" class="primary">➕ Create Contract</button>
+                <div id="createdContractAddr" style="margin-top:8px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>📋 2. Contract Lifecycle Steps <span class="badge">Buyer / Owner controlled</span></h2>
+        <div class="flex-row">
+            <div class="step-panel">
+                <strong>👤 Register Customer & Supplier</strong><br>
+                <input id="customerAddr" placeholder="Customer address">
+                <button id="registerCustomerBtn">Register Customer</button><br>
+                <input id="supplierAddr" placeholder="Supplier address">
+                <button id="registerSupplierBtn">Register Supplier</button>
+                <button id="allowSupplierBtn" class="warning">Allow Supplier (owner)</button>
+            </div>
+            <div class="step-panel">
+                <strong>💰 Buyer Deposit + Create Demand</strong><br>
+                <button id="buyerDepositBtn" class="success">Deposit 10 ETH</button>
+                <input id="demandQty" placeholder="Qty" value="1000"><br>
+                <input id="demandTime" placeholder="Delivery timestamp (unix)" value=""><br>
+                <button id="createDemandBtn">Create Demand</button>
+            </div>
+            <div class="step-panel">
+                <strong>📝 Supplier Quotation</strong><br>
+                <input id="quotePrice" placeholder="Unit price (wei)" value="1000000000000000">
+                <input id="minSupply" placeholder="Min supply" value="100">
+                <input id="maxSupply" placeholder="Max supply" value="2000">
+                <input id="maxDefect" placeholder="Max defect %" value="5">
+                <input id="maxLead" placeholder="Max lead days" value="10">
+                <button id="submitQuoteBtn">Submit Quotation</button>
+            </div>
+        </div>
+        <div class="flex-row" style="margin-top: 1rem;">
+            <div class="step-panel">
+                <strong>⚖️ Order Allocation (Buyer)</strong><br>
+                <input id="allocationScore" placeholder="Score (1-10000)" value="8500">
+                <input id="allocatedQty" placeholder="Allocated Qty" value="800">
+                <input id="estimatedAmount" placeholder="Est amount (wei)" value="800000000000000000">
+                <button id="createOrderBtn">Create Order</button>
+            </div>
+            <div class="step-panel">
+                <strong>🚚 Delivery & Inspection</strong><br>
+                <input id="deliveryTimestamp" placeholder="Delivery timestamp">
+                <button id="completeDeliveryBtn">Complete Delivery</button><br>
+                <input id="defectRateInput" placeholder="Defect rate % (0-10000)" value="200">
+                <button id="completeInspectionBtn">Complete Inspection</button>
+            </div>
+            <div class="step-panel">
+                <strong>💸 Payment Release</strong><br>
+                <button id="releasePaymentBtn" class="success">Release Payment to Supplier</button>
+                <button id="finishContractBtn" class="warning">Finish Contract</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>📊 3. State & Events Logs</h2>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <button id="refreshPhaseBtn" class="primary">🔄 Refresh Phase/Details</button>
+            <button id="clearLogsBtn" class="danger">Clear Logs</button>
+        </div>
+        <div id="contractDetails" style="margin-top: 12px; background:#f1f5f9; padding:12px; border-radius:16px; font-size:0.8rem;"></div>
+        <div class="log-area" id="logPanel">
+            <div class="log-entry">📡 Waiting for actions...</div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+<script>
+    // --------------------------------------------------------------
+    // Artifact ABIs (simplified from provided JSON)
+    // ProcurementContract ABI (only needed methods)
+    const procurementABI = [
+        "function owner() view returns (address)",
+        "function buyer() view returns (address)",
+        "function customer() view returns (address)",
+        "function currentPhase() view returns (uint8)",
+        "function deposit() payable",
+        "function registerCustomer(address _customer)",
+        "function registerSupplier(address supplier)",
+        "function allowedSuppliers(address) view returns (bool)",
+        "function createDemand(uint256 requestedQuantity, uint256 requestedDeliveryTimestamp)",
+        "function submitSupplierQuotation(uint256 unitPrice, uint256 minSupplyQuantity, uint256 maxSupplyQuantity, uint16 maxDefectRate, uint16 maxLeadTimeDays)",
+        "function configureBuyerCriteria(address supplier, uint256 minPurchaseQuantity, uint16 maxAllocationPercent)",
+        "function createOrder(address supplier, uint16 allocationScore, uint256 allocatedQuantity, uint256 estimatedAmount)",
+        "function completeDelivery(address supplier, uint256 deliveryTimestamp)",
+        "function completeInspection(address supplier, uint16 defectRate)",
+        "function releaseSupplierPayment(address supplier)",
+        "function finish()",
+        "function orders(address) view returns (uint16 allocationScore, uint256 allocatedQuantity, uint256 estimatedAmount, uint256 deliveryTimestamp, uint16 defectRate, uint256 paidAmount)",
+        "function demand() view returns (uint256, uint256)",
+        "function penaltyRates() view returns (uint16, uint16)",
+        "function evalutationWeights() view returns (uint16,uint16,uint16)"
+    ];
+    const sourcingABI = [
+        "function createProcurementContract(bytes32 externalId, address buyer, uint16 priceWeight, uint16 defectWeight, uint16 leadTimeWeight, uint16 delayPenaltyRate, uint16 defectPenaltyRate) returns (address)",
+        "function getProcurementContractByExternalId(bytes32) view returns (address)",
+        "function getAllProcurementContracts() view returns (address[])",
+        "function owner() view returns (address)"
+    ];
+
+    let provider, signer, systemContract, procurementContract;
+    let systemAddress = null;
+    let currentProcurementAddr = null;
+    let accounts = [];
+    let ownerAddr = "", buyerAddr = "", customerAddr = "", supplierAddr = "";
+
+    const logPanel = document.getElementById('logPanel');
+    function addLog(msg, type="info") {
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        const time = new Date().toLocaleTimeString();
+        entry.innerText = `[${time}] ${msg}`;
+        if(type === 'error') entry.style.color = '#f87171';
+        else if(type === 'success') entry.style.color = '#86efac';
+        else entry.style.color = '#94a3b8';
+        logPanel.appendChild(entry);
+        entry.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    async function initProvider() {
+        if(window.ethereum) {
+            provider = new ethers.BrowserProvider(window.ethereum);
+            await provider.send("eth_requestAccounts", []);
+            signer = await provider.getSigner();
+            accounts = await provider.listAccounts();
+            const addresses = accounts.map(a => a.address);
+            addLog(`✅ Connected. Accounts: ${addresses.slice(0,3).join(', ')}...`);
+            document.getElementById('accountInfo').innerHTML = `<strong>Connected:</strong> ${signer.address.substring(0,8)}...<br>${addresses.length} accounts available. Use first as owner.`;
+            ownerAddr = signer.address;
+            buyerAddr = addresses[1] || signer.address;
+            customerAddr = addresses[2] || signer.address;
+            supplierAddr = addresses[3] ? addresses[3] : (addresses[2] ? addresses[2] : signer.address);
+            document.getElementById('buyerAddrInput').value = buyerAddr;
+            document.getElementById('customerAddr').value = customerAddr;
+            document.getElementById('supplierAddr').value = supplierAddr;
+            return true;
+        } else {
+            addLog("❌ MetaMask not detected. Please install.", "error");
+            return false;
+        }
+    }
+
+    document.getElementById('loadAccountsBtn').onclick = async () => {
+        await initProvider();
+    };
+
+    // Deploy SourcingSystem: using bytecode from provided artifact (simulated deploy with minimal but we need to deploy via contract factory)
+    // Since we have full bytecode, we can deploy using ethers.
+    const sourcingBytecode = "0x6080604052348015600e575f5ffd5b505f80546001600160a01b031916331790556120178061002d5f395ff3fe608060405234801561000f575f5ffd5b506004361061007a575f3560e01c80638da5cb5b116100585780638da5cb5b146100e9578063a6f9dae1146100fb578063b06bdda51461010e578063e3babc0a14610123575f5ffd5b80631bf3081c1461007e5780631c539972146100935780631cce7ac4146100d8575b5f5ffd5b61009161008c36600461050c565b61014b565b005b6100bb6100a1366004610586565b60016020525f90815260409020546001600160a01b031681565b6040516001600160a01b0390911681526020015b60405180910390f35b6002546040519081526020016100cf565b5f546100bb906001600160a01b031681565b61009161010936600461059d565b61037b565b610116610473565b6040516100cf91906105bd565b6100bb610131366004610586565b5f908152600160205260409020546001600160a01b031690565b5f546001600160a01b031633146101a35760405162461bcd60e51b815260206004820152601760248201527621b0b63632b91034b9903737ba103a34329037bbb732b960491b60448201526064015b60405180910390fd5b5f8781526001602052604090205487906001600160a01b0316156102095760405162461bcd60e51b815260206004820152601a60248201527f45787465726e616c20494420616c726561647920657869737473000000000000604482015260640161019a565b6001600160a01b03871661025f5760405162461bcd60e51b815260206004820152601c60248201527f42757965722063616e6e6f74206265207a65726f206164647265737300000000604482015260640161019a565b5f5f5f9054906101000a90046001600160a01b0316888888888888604051610286906104d3565b6001600160a01b03978816815296909516602087015261ffff9384166040870152918316606086015282166080850152811660a08401521660c082015260e001604051809103905ff0801580156102df573d5f5f3e3d5ffd5b505f8a815260016020819052604080832080546001600160a01b0386166001600160a01b0319918216811790925560028054948501815585527f405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace9093018054909316811790925551929350918b917fd0cf1d85eea0826e023e270d9b3b70e22efc539a701f9e71239e2d95e2dc459c91a3505050505050505050565b5f546001600160a01b031633146103ce5760405162461bcd60e51b815260206004820152601760248201527621b0b63632b91034b9903737ba103a34329037bbb732b960491b604482015260640161019a565b6001600160a01b0381166104245760405162461bcd60e51b815260206004820181905260248201527f4e6577206f776e65722063616e6e6f74206265207a65726f2061646472657373604482015260640161019a565b5f80546001600160a01b038381166001600160a01b0319831681178455604051919092169283917fb532073b38c83145e3e5135377a08bf9aab55bc0fd7c1179cd4fb995d2a5159c9190a35050565b606060028054806020026020016040519081016040528092919081815260200182805480156104c957602002820191905f5260205f20905b81546001600160a01b031681526001909101906020018083116104ab575b5050505050905090565b6119d98061060983390190565b80356001600160a01b03811681146104f6575f5ffd5b919050565b803561ffff811681146104f6575f5ffd5b5f5f5f5f5f5f5f60e0888a031215610522575f5ffd5b87359650610532602089016104e0565b9550610540604089016104fb565b945061054e606089016104fb565b935061055c608089016104fb565b925061056a60a089016104fb565b915061057860c089016104fb565b905092959891949750929550565b5f60208284031215610596575f5ffd5b5035919050565b5f602082840312156105ad575f5ffd5b6105b6826104e0565b9392505050565b602080825282518282018190525f918401906040840190835b818110156105fd5783516001600160a01b03168352602093840193909201916001016105d6565b50909594505050505056fe608060405234801561000f575f5ffd5b506040516119d93803806119d983398101604081905261002e91610118565b5f80546001600160a01b03199081166001600160a01b03998a16179091556001805490911696909716959095179095556040805160608101825261ffff94851680825293851660208083018290529386169183018290526005805463ffffffff19908116909617620100009283021761ffff60201b191664010000000090930292909217909155815180830190925295841680825293909416930183905260068054909116909117919092021790556007805460ff19169055610199565b80516001600160a01b0381168114610102575f5ffd5b919050565b805161ffff81168114610102575f5ffd5b5f5f5f5f5f5f5f60e0888a03121561012e575f5ffd5b610137886100ec565b9650610145602089016100ec565b955061015360408901610107565b945061016160608901610107565b935061016f60808901610107565b925061017d60a08901610107565b915061018b60c08901610107565b905092959891949750929550565b611833806101a65f395ff3fe608060405260043610610195575f3560e01c80637520320f116100e7578063cfada3ba11610087578063e1fef7aa11610062578063e1fef7aa14610524578063eaac9a291461055c578063f327c221146105b1578063f40e8471146105d0575f5ffd5b8063cfada3ba146104e9578063d0e30db014610508578063d56b288914610510575f5ffd5b8063b8e4f945116100c2578063b8e4f94514610459578063bd72e41914610497578063bfea918f146104ab578063cf7f5e5f146104ca575f5ffd5b80637520320f146103ce578063801f0f05146103ed5780638da5cb5b1461043b575f5ffd5b80634d8a6b66116101525780635eee192b1161012d5780635eee192b146102f4578063603b16c2146103135780636fe6bdf1146103325780637150d8ae146103af575f5ffd5b80634d8a6b6614610292578063539ed611146102c1578063593110eb146102d5575f5ffd5b8063055ad42e1461019957806315f79366146101c85780631b6b2601146101e95780631dfbe6a3146102085780632804b2c01461024757806341fe397a1461027e575b5f5ffd5b3480156101a4575f5ffd5b506007546101b29060ff1681565b6040516101bf9190611488565b60405180910390f35b3480156101d3575f5ffd5b506101e76101e23660046114da565b610661565b005b3480156101f4575f5ffd5b506101e7610203366004611519565b6107b8565b348015610213575f5ffd5b5060065461022c9061ffff808216916201000090041682565b6040805161ffff9384168152929091166020830152016101bf565b348015610252575f5ffd5b50600254610266906001600160a01b031681565b6040516001600160a01b0390911681526020016101bf565b348015610289575f5ffd5b506101e761088d565b34801561029d575f5ffd5b506003546004546102ac919082565b604080519283526020830191909152016101bf565b3480156102cc575f5ffd5b506101e7610945565b3480156102e0575f5ffd5b506101e76102ef366004611539565b6109b8565b3480156102ff575f5ffd5b5061026661030e366004611585565b610aff565b34801561031e575f5ffd5b506101e761032d36600461159c565b610b27565b34801561033d575f5ffd5b5061038061034c3660046115d5565b600a6020525f90815260409020805460018201546002830154600390930154919261ffff8083169362010000909304169185565b6040805195865261ffff948516602087015292909316918401919091526060830152608082015260a0016101bf565b3480156103ba575f5ffd5b50600154610266906001600160a01b031681565b3480156103d9575f5ffd5b506101e76103e83660046115d5565b610c0a565b3480156103f8575f5ffd5b506104236104073660046115d5565b600b6020525f90815260409020805460019091015461ffff1682565b6040805192835261ffff9091166020830152016101bf565b348015610446575f5ffd5b505f54610266906001600160a01b031681565b348015610464575f5ffd5b506104876104733660046115d5565b60096020525f908152604090205460ff1681565b60405190151581526020016101bf565b3480156104a2575f5ffd5b506101e7610cc0565b3480156104b6575f5ffd5b506101e76104c53660046115f5565b610d35565b3480156104d5575f5ffd5b506101e76104e43660046115d5565b610f0a565b3480156104f4575f5ffd5b506101e761050336600461161d565b610ffd565b6101e76110b8565b34801561051b575f5ffd5b506101e7611149565b34801561052f575f5ffd5b506101e761053e3660046115f5565b6001600160a01b039091165f908152600c6020526040902060030155565b348015610567575f5ffd5b5060055461058c9061ffff808216916201000081048216916401000000009091041683565b6040805161ffff948516815292841660208401529216918101919091526060016101bf565b3480156105bc575f5ffd5b506101e76105cb3660046115d5565b6111be565b3480156105db575f5ffd5b506106276105ea3660046115d5565b600c6020525f908152604090208054600182015460028301546003840154600485015460059095015461ffff948516959394929391929091169086565b6040805161ffff978816815260208101969096528501939093526060840191909152909216608082015260a081019190915260c0016101bf565b5f546001600160a01b031633146106ac5760405162461bcd60e51b815260206004820152600a60248201526927b7363c9037bbb732b960b11b60448201526064015b60405180910390fd5b60028060075460ff1660048111156106c6576106c6611474565b146106e35760405162461bcd60e51b81526004016106a39061164e565b6040805160c08101825261ffff808716825260208083018781528385018781525f606086018181526080870182815260a088018381526001600160a01b038f168452600c909652918890209651875490871661ffff19918216178855935160018801559151600287015590516003860155516004850180549190941691161790915551600590910155517fed94e6f8f334678b3265725f268ecd9032016d6050efeb9e673a561ffbfb0a76906107a99087906001600160a01b0391909116815260200190565b60405180910390a15050505050565b6002546001600160a01b031633146108025760405162461bcd60e51b815260206004820152600d60248201526c27b7363c9031bab9ba37b6b2b960991b60448201526064016106a3565b60018060075460ff16600481111561081c5761081c611474565b146108395760405162461bcd60e51b81526004016106a39061164e565b60408051808201825284815260209081018490526003859055600484905590513381527f0a348e45ef0947ddbb99c9ec19c52da8326570c88fae94c49635d5959334225591015b60405180910390a1505050565b6001546001600160a01b031633146108b75760405162461bcd60e51b81526004016106a390611675565b60018060075460ff1660048111156108d1576108d1611474565b146108ee5760405162461bcd60e51b81526004016106a39061164e565b600780546002919060ff19166001835b02179055506007546040517fa6dcc92f45df25789d5639b7a0c97ba1edf3bb1c0b5dd3376fd96a0db87c46429161093a9160ff90911690611488565b60405180910390a150565b6001546001600160a01b0316331461096f5760405162461bcd60e51b81526004016106a390611675565b5f8060075460ff16600481111561098857610988611474565b146109a55760405162461bcd60e51b81526004016106a39061164e565b600780546001919060ff191682806108fe565b335f9081526009602052604090205460ff16610a165760405162461bcd60e51b815260206004820152601860248201527f4f6e6c79207265676973746572656420737570706c696572000000000000000060448201526064016106a3565b60018060075460ff166004811115610a3057610a30611474565b14610a4d5760405162461bcd60e51b81526004016106a39061164e565b6040805160a08101825287815261ffff8581166020808401918252868316848601908152606085018b8152608086018b8152335f818152600a865289902097518855945160018801805494518816620100000263ffffffff1990951691909716179290921790945592516002850155915160039093019290925591519081527fbfe25c0d94efb7adb1948507c7908756d0ffdec577bc7cbb5241d229d3cd53da910160405180910390a1505050505050565b60088181548110610b0e575f80fd5b5f918252602090912001546001600160a01b0316905081565b6001546001600160a01b03163314610b515760405162461bcd60e51b81526004016106a390611675565b60028060075460ff166004811115610b6b57610b6b611474565b14610b885760405162461bcd60e51b81526004016106a39061164e565b60408051808201825284815261ffff84811660208084019182526001600160a01b0389165f818152600b83528690209451855591516001909401805461ffff1916949093169390931790915591519182527f55ca8283b28d6a981e32ff5dace9f51b6bf547b588c24d80680a824dd334e6f0910160405180910390a150505050565b6001546001600160a01b03163314610c345760405162461bcd60e51b81526004016106a390611675565b5f8060075460ff166004811115610c4d57610c4d611474565b14610c6a5760405162461bcd60e51b81526004016106a39061164e565b600280546001600160a01b0319166001600160a01b0384169081179091556040519081527f155e8619f4d23b96769599cb9af87da3e06a360082869c18578011da9a06e670906020015b60405180910390a15050565b6001546001600160a01b03163314610cea5760405162461bcd60e51b81526004016106a390611675565b60028060075460ff166004811115610d0457610d04611474565b14610d215760405162461bcd60e51b81526004016106a39061164e565b600780546003919060ff19166001836108fe565b6001546001600160a01b03163314610d5f5760405162461bcd60e51b81526004016106a390611675565b60038060075460ff166004811115610d7957610d79611474565b14610d965760405162461bcd60e51b81526004016106a39061164e565b6040516370ff7bd560e11b81526001600160a01b038416600482015260248101839052309063e1fef7aa906044015f604051808303815f87803b158015610ddb575f5ffd5b505af1925050508015610dec575060015b610ecb57610df8611699565b806308c379a003610e705750610e0c6116eb565b80610e175750610e72565b610e566040518060400160405280601a81526020017f4572726f7220696e20636f6d706c65746544656c69766572793a000000000000815250826113c2565b8060405162461bcd60e51b81526004016106a3919061179d565b505b610e936040518060600160405280602181526020016117dd6021913961140b565b60405162461bcd60e51b815260206004820152600d60248201526c2ab735b737bbb71032b93937b960991b60448201526064016106a3565b604080516001600160a01b0385168152602081018490527f41340b8fc0404d1612bcad390c112c0d89781453edce77fcc8402b47130b6a049101610880565b6001546001600160a01b03163314610f345760405162461bcd60e51b81526004016106a390611675565b5f8060075460ff166004811115610f4d57610f4d611474565b14610f6a5760405162461bcd60e51b81526004016106a39061164e565b6008805460018082019092557ff3f7a9fe364faab93b216da50a3214154f22a0a2b415b23a84c8169e8b636ee30180546001600160a01b0319166001600160a01b0385169081179091555f81815260096020908152604091829020805460ff1916909417909355519081527fbcffc870b52d3cb785b17c2c7426be70f9181ce49c43cc7b479ebcfac2d7a1c89101610cb4565b6001546001600160a01b031633146110275760405162461bcd60e51b81526004016106a390611675565b60038060075460ff16600481111561104157611041611474565b1461105e5760405162461bcd60e51b81526004016106a39061164e565b6001600160a01b0383165f818152600c6020908152604091829020600401805461ffff191661ffff871617905590519182527f975d334945dcf166d97a31111194f094ebd1330b2f1989740d68e3ad607c5e8d9101610880565b6001546001600160a01b031633146110e25760405162461bcd60e51b81526004016106a390611675565b60028060075460ff1660048111156110fc576110fc611474565b146111195760405162461bcd60e51b81526004016106a39061164e565b6040513481527fef3b311be1da7da95d74a8dcdbc27a7531061f24b2b3d14bd314f0a131f60aa59060200161093a565b6001546001600160a01b031633146111735760405162461bcd60e51b81526004016106a390611675565b60038060075460ff16600481111561118d5761118d611474565b146111aa5760405162461bcd60e51b81526004016106a39061164e565b600780546004919060ff19166001836108fe565b6001546001600160a01b031633146111e85760405162461bcd60e51b81526004016106a390611675565b60038060075460ff16600481111561120257611202611474565b1461121f5760405162461bcd60e51b81526004016106a39061164e565b6001600160a01b0382165f908152600c602052604090206003810154156112815760405162461bcd60e51b815260206004820152601660248201527511195b1a5d995c9e481b9bdd0818dbdb5c1b195d195960521b60448201526064016106a3565b80600501545f036112d45760405162461bcd60e51b815260206004820152601860248201527f5061796d656e7420616c72656164792072656c6561736564000000000000000060448201526064016106a3565b68056bc75e2d63100000600582018190556040515f906001600160a01b0386169083908381818185875af1925050503d805f811461132d576040519150601f19603f3d011682016040523d82523d5f602084013e611332565b606091505b50509050806113835760405162461bcd60e51b815260206004820152601760248201527f5061796d656e74207472616e73666572206661696c656400000000000000000060448201526064016106a3565b604080516001600160a01b0387168152602081018490527f8a7b328e011987d3e3d09ba3aa2c8397c0c13b07ecb305fa3c6e25493056e03091016107a9565b61140782826040516024016113d89291906117af565b60408051601f198184030181529190526020810180516001600160e01b0316634b5c427760e01b179052611451565b5050565b61144e8160405160240161141f919061179d565b60408051601f198184030181529190526020810180516001600160e01b031663104c13eb60e21b179052611451565b50565b61144e815f6a636f6e736f6c652e6c6f6790505f5f835160208501845afa505050565b634e487b7160e01b5f52602160045260245ffd5b60208101600583106114a857634e487b7160e01b5f52602160045260245ffd5b91905290565b80356001600160a01b03811681146114c4575f5ffd5b919050565b803561ffff811681146114c4575f5ffd5b5f5f5f5f608085870312156114ed575f5ffd5b6114f6856114ae565b9350611504602086016114c9565b93969395505050506040820135916060013590565b5f5f6040838503121561152a575f5ffd5b50508035926020909101359150565b5f5f5f5f5f60a0868803121561154d575f5ffd5b85359450602086013593506040860135925061156b606087016114c9565b9150611579608087016114c9565b90509295509295909350565b5f60208284031215611595575f5ffd5b5035919050565b5f5f5f606084860312156115ae575f5ffd5b6115b7846114ae565b9250602084013591506115cc604085016114c9565b90509250925092565b5f602082840312156115e5575f5ffd5b6115ee826114ae565b9392505050565b5f5f60408385031215611606575f5ffd5b61160f836114ae565b946020939093013593505050565b5f5f6040838503121561162e575f5ffd5b611637836114ae565b9150611645602084016114c9565b90509250929050565b6020808252600d908201526c496e76616c696420706861736560981b604082015260600190565b6020808252600a908201526927b7363c90313abcb2b960b11b604082015260600190565b5f60033d11156116af5760045f5f3e505f5160e01c5b90565b601f8201601f1916810167ffffffffffffffff811182821017156116e457634e487b7160e01b5f52604160045260245ffd5b6040525050565b5f60443d10156116f85790565b6040513d600319016004823e80513d602482011167ffffffffffffffff8211171561172257505090565b808201805167ffffffffffffffff81111561173e575050505090565b3d8401600319018282016020011115611758575050505090565b611767602082850101856116b2565b509392505050565b5f81518084528060208401602086015e5f602082860101526020601f19601f83011685010191505092915050565b602081525f6115ee602083018461176f565b604081525f6117c1604083018561176f565b82810360208401526117d3818561176f565b9594505050505056fe556e6b6e6f776e206572726f7220696e20636f6d706c65746544656c6976657279a264697066735822122034eba2d1b206eae790e8e2399e95cb7de585920f1ed77f39f37a88d5e60084fe64736f6c634300081c0033a26469706673582212209a6f4a8888fb976d976222711aa974d4479ee6f04f25e39764c0985602569f8964736f6c634300081c0033";
+    
+    document.getElementById('deploySystemBtn').onclick = async () => {
+        if(!provider) await initProvider();
+        try {
+            addLog("Deploying SourcingSystem...");
+            const factory = new ethers.ContractFactory(sourcingABI, sourcingBytecode, signer);
+            const contract = await factory.deploy();
+            await contract.waitForDeployment();
+            systemAddress = await contract.getAddress();
+            systemContract = new ethers.Contract(systemAddress, sourcingABI, signer);
+            document.getElementById('systemAddr').innerHTML = `<span class="info-text">✅ System at:</span> ${systemAddress}`;
+            addLog(`SourcingSystem deployed at ${systemAddress}`, "success");
+        } catch(e) { addLog(`Deploy error: ${e.message}`, "error"); }
+    };
+    
+    document.getElementById('createContractBtn').onclick = async () => {
+        if(!systemContract) { addLog("Deploy SourcingSystem first", "error"); return; }
+        let externalId = ethers.id(document.getElementById('externalIdInput').value);
+        let buyer = document.getElementById('buyerAddrInput').value;
+        if(!ethers.isAddress(buyer)) buyer = signer.address;
+        try {
+            const tx = await systemContract.createProcurementContract(externalId, buyer, 4000, 3000, 3000, 500, 800);
+            await tx.wait();
+            const addr = await systemContract.getProcurementContractByExternalId(externalId);
+            currentProcurementAddr = addr;
+            procurementContract = new ethers.Contract(currentProcurementAddr, procurementABI, signer);
+            document.getElementById('createdContractAddr').innerHTML = `<span class="info-text">Contract:</span> ${currentProcurementAddr}`;
+            addLog(`ProcurementContract created at ${currentProcurementAddr}`, "success");
+            await refreshContractState();
+        } catch(e) { addLog(`Create failed: ${e.message}`, "error"); }
+    };
+    
+    async function refreshContractState() {
+        if(!procurementContract) return;
+        try {
+            const phase = await procurementContract.currentPhase();
+            const phases = ["Init","Ordering","Allocation","Executing","Finish"];
+            const buyer = await procurementContract.buyer();
+            const customer = await procurementContract.customer();
+            const demand = await procurementContract.demand();
+            const detailsDiv = document.getElementById('contractDetails');
+            detailsDiv.innerHTML = `<strong>Phase:</strong> ${phases[phase]} (${phase}) &nbsp;| <strong>Buyer:</strong> ${buyer.substring(0,8)}... &nbsp;| <strong>Customer:</strong> ${customer.substring(0,8)}...<br>
+            <strong>Demand:</strong> ${demand[0]} units, delivery by ${demand[1] > 0 ? new Date(Number(demand[1])*1000).toLocaleString() : 'not set'} `;
+            addLog(`Current phase: ${phases[phase]}`, "info");
+        } catch(e) { console.warn(e);}
+    }
+    
+    // UI handlers
+    document.getElementById('registerCustomerBtn').onclick = async () => {
+        let cust = document.getElementById('customerAddr').value;
+        if(!procurementContract) { addLog("No contract", "error"); return; }
+        await procurementContract.registerCustomer(cust);
+        addLog(`Customer ${cust} registered`, "success");
+    };
+    document.getElementById('registerSupplierBtn').onclick = async () => {
+        let supp = document.getElementById('supplierAddr').value;
+        await procurementContract.registerSupplier(supp);
+        addLog(`Supplier ${supp} registered`, "success");
+    };
+    document.getElementById('allowSupplierBtn').onclick = async () => {
+        let supp = document.getElementById('supplierAddr').value;
+        await procurementContract.configureBuyerCriteria(supp, 1, 10000);
+        addLog(`Allowed supplier ${supp} (minPurchase 1, maxAlloc 100%)`, "success");
+    };
+    document.getElementById('buyerDepositBtn').onclick = async () => {
+        await procurementContract.deposit({value: ethers.parseEther("10")});
+        addLog("Buyer deposited 10 ETH", "success");
+    };
+    document.getElementById('createDemandBtn').onclick = async () => {
+        let qty = document.getElementById('demandQty').value;
+        let ts = document.getElementById('demandTime').value;
+        if(!ts) ts = Math.floor(Date.now()/1000) + 604800;
+        await procurementContract.createDemand(qty, ts);
+        addLog(`Demand created: ${qty} units`, "success");
+        await refreshContractState();
+    };
+    document.getElementById('submitQuoteBtn').onclick = async () => {
+        let price = ethers.parseUnits(document.getElementById('quotePrice').value, "wei");
+        let minSup = document.getElementById('minSupply').value;
+        let maxSup = document.getElementById('maxSupply').value;
+        let maxDef = parseInt(document.getElementById('maxDefect').value);
+        let maxLead = parseInt(document.getElementById('maxLead').value);
+        await procurementContract.submitSupplierQuotation(price, minSup, maxSup, maxDef, maxLead);
+        addLog(`Quotation submitted`, "success");
+    };
+    document.getElementById('createOrderBtn').onclick = async () => {
+        let supplier = document.getElementById('supplierAddr').value;
+        let score = parseInt(document.getElementById('allocationScore').value);
+        let allocQty = document.getElementById('allocatedQty').value;
+        let estAmount = document.getElementById('estimatedAmount').value;
+        await procurementContract.createOrder(supplier, score, allocQty, estAmount);
+        addLog(`Order created for ${supplier}`, "success");
+    };
+    document.getElementById('completeDeliveryBtn').onclick = async () => {
+        let supp = document.getElementById('supplierAddr').value;
+        let ts = document.getElementById('deliveryTimestamp').value;
+        if(!ts) ts = Math.floor(Date.now()/1000);
+        await procurementContract.completeDelivery(supp, ts);
+        addLog(`Delivery completed at ${ts}`, "success");
+    };
+    document.getElementById('completeInspectionBtn').onclick = async () => {
+        let supp = document.getElementById('supplierAddr').value;
+        let defect = parseInt(document.getElementById('defectRateInput').value);
+        await procurementContract.completeInspection(supp, defect);
+        addLog(`Inspection done, defect rate ${defect}/10000`, "success");
+    };
+    document.getElementById('releasePaymentBtn').onclick = async () => {
+        let supp = document.getElementById('supplierAddr').value;
+        await procurementContract.releaseSupplierPayment(supp);
+        addLog(`Payment released to ${supp}`, "success");
+    };
+    document.getElementById('finishContractBtn').onclick = async () => {
+        await procurementContract.finish();
+        addLog(`Contract finished`, "success");
+        await refreshContractState();
+    };
+    document.getElementById('refreshPhaseBtn').onclick = refreshContractState;
+    document.getElementById('clearLogsBtn').onclick = () => { logPanel.innerHTML = '<div class="log-entry">Logs cleared.</div>'; };
+    
+    initProvider().then(() => addLog("Ready: deploy SourcingSystem to begin", "info"));
+</script>
+</body>
+</html>
