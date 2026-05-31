@@ -60,6 +60,7 @@ const {
   criteriaRepo,
   userRepo,
   registrationRepo,
+  transactionRepo,
 } = repositories;
 
 // =========================================================
@@ -84,6 +85,7 @@ const openSupplierRegistrationUseCase = new OpenSupplierRegistrationUseCase({
 const closeSupplierRegistrationUseCase = new CloseSupplierRegistrationUseCase({
   contractRepo,
   demandRepo,
+  quotationRepo,
 });
 
 // =========================================================
@@ -95,6 +97,7 @@ const deployContractUseCase = new DeployContractUseCase(
     contractRepo,
     demandRepo,
     userRepo,
+    transactionRepo,
   },
   sourcingSystemService,
 );
@@ -105,11 +108,13 @@ const deployContractUseCase = new DeployContractUseCase(
 
 const registerCustomerUseCase = new RegisterCustomerUseCase({
   contractRepo,
+  transactionRepo,
 });
 
 const registerSupplierUseCase = new RegisterSupplierUseCase({
   contractRepo,
   registrationRepo,
+  transactionRepo,
   userRepo,
 });
 
@@ -117,6 +122,7 @@ const startOrderingPhaseUseCase = new StartOrderingPhaseUseCase({
   contractRepo,
   demandRepo,
   quotationRepo,
+  transactionRepo,
 });
 
 // =========================================================
@@ -125,6 +131,7 @@ const startOrderingPhaseUseCase = new StartOrderingPhaseUseCase({
 
 const startAllocationPhaseUseCase = new StartAllocationPhaseUseCase({
   contractRepo,
+  transactionRepo,
 });
 
 const runAllocationUseCase = new RunAllocationUseCase(
@@ -136,6 +143,7 @@ const runAllocationUseCase = new RunAllocationUseCase(
     quotationRepo,
     criteriaRepo,
     userRepo,
+    transactionRepo,
   },
   { allocationService: new AllocationService() },
 );
@@ -147,6 +155,7 @@ const requestFundUseCase = new RequestFundUseCase({
 
 const depositUseCase = new DepositUseCase({
   contractRepo,
+  transactionRepo,
 });
 
 // =========================================================
@@ -155,10 +164,12 @@ const depositUseCase = new DepositUseCase({
 
 const startExecutingPhaseUseCase = new StartExecutingPhaseUseCase({
   contractRepo,
+  transactionRepo,
 });
 
 const finishUseCase = new FinishUseCase({
   contractRepo,
+  transactionRepo,
 });
 
 // =========================================================

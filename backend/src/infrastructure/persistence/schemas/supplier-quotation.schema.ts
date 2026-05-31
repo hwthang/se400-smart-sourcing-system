@@ -45,7 +45,7 @@ const SupplierQuotationSchema = new Schema<SupplierQuotationDocument>(
     unitPrice: {
       type: Number,
       required: true,
-      min: 0.01, // Minimum 1 cent - prevents zero or negative pricing
+    
     },
 
     // -------------------------

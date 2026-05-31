@@ -15,6 +15,8 @@ import { demandRoutes } from "../../features/demand/routes";
 import { contractRoutes } from "../../features/contract/routes";
 import BlockchainTestPage from "../../core/blockchain/pages/BlockchainTestPage";
 import LandingPage from "../pages/LandingPage";
+import TransparencyPage from "../../core/blockchain/pages/TransparencyPage";
+import { transactionRoutes } from "../../features/transaction/routes";
 
 const router = createBrowserRouter([
   {
@@ -27,21 +29,21 @@ const router = createBrowserRouter([
           { index: true, element: <Navigate to="dashboard" /> },
           ...dashboardRoutes,
           ...demandRoutes,
-          ...contractRoutes
+          ...contractRoutes,
+          ...transactionRoutes,
         ],
       },
     ],
   },
   { path: "test", element: <BlockchainTestPage /> },
+  { path: "test-1", element: <TransparencyPage /> },
   {
     path: "/",
     element: <PublicLayout />,
     children: [
       {
         index: true,
-        element: (
-         <LandingPage/>
-        ),
+        element: <LandingPage />,
       },
       ...authRoutes,
     ],

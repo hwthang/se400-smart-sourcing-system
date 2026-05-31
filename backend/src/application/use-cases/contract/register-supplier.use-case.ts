@@ -1,8 +1,10 @@
+import { BlockchainTransaction } from "../../../domain/entities/blockchain-transaction.entity";
 import { SupplierRegistration } from "../../../domain/entities/supplier-registration.entity";
 import { SupplierRegistrationStatus } from "../../../domain/enums/supplier-registration-status.enum";
 import { ProcurementContractService } from "../../../infrastructure/blockchain/services/procurement-contract.service";
 import { ContractMapper } from "../../../infrastructure/persistence/mappers/contract.mapper";
 import { AuthUser } from "../../common/auth-user";
+import { BlockchainTransactionRepository } from "../../repositories/blockchain-transaction.repo";
 import { ContractRepository } from "../../repositories/contract.repo";
 import { SupplierRegistrationRepository } from "../../repositories/supplier-registration.repo";
 import { UserRepository } from "../../repositories/user.repo";
@@ -11,6 +13,7 @@ type RegisterSupplierUseCaseRepos = {
   contractRepo: ContractRepository;
   registrationRepo: SupplierRegistrationRepository;
   userRepo: UserRepository;
+  transactionRepo: BlockchainTransactionRepository;
 };
 
 type RegisterSupplierUseCaseInput = {
@@ -31,12 +34,12 @@ export class RegisterSupplierUseCase {
 
     const supplierAddress = data.input.args[0];
 
-    console.log(supplierAddress)
+    console.log(supplierAddress);
 
     const supplier =
       await this.repos.userRepo.findByWalletAddress(supplierAddress);
 
-      console.log(supplier)
+    console.log(supplier);
 
     if (!supplier) throw new Error();
 
@@ -68,6 +71,13 @@ export class RegisterSupplierUseCase {
     }
 
     const updatedContract = await this.repos.contractRepo.save(contract);
+    const transaction = BlockchainTransaction.create({
+      txHash: input.txHash,
+      contractAddress: input.contractAddress,
+      method: "REGISTER_SUPPLIER",
+      status: data?.status == 1 ? "CONFIRMED" : "FAILED",
+    });
+    await this.repos.transactionRepo.create(transaction);
 
     return ContractMapper.toDto(updatedContract);
   }

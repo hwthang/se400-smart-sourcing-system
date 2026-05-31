@@ -1,12 +1,15 @@
+import { BlockchainTransaction } from "../../../domain/entities/blockchain-transaction.entity";
 import { ProcurementContractService } from "../../../infrastructure/blockchain/services/procurement-contract.service";
 import { ContractMapper } from "../../../infrastructure/persistence/mappers/contract.mapper";
 import { DemandMapper } from "../../../infrastructure/persistence/mappers/demand.mapper";
+import { BlockchainTransactionRepository } from "../../repositories/blockchain-transaction.repo";
 import { ContractRepository } from "../../repositories/contract.repo";
 import { DemandRepository } from "../../repositories/demand.repo";
 
 type ConfirmDemandUseCaseRepos = {
   contractRepo: ContractRepository;
   demandRepo: DemandRepository;
+  transactionRepo: BlockchainTransactionRepository;
 };
 
 type ConfirmDemandUseCaseInput = {
@@ -39,6 +42,14 @@ export class ConfirmDemandUseCase {
 
     await this.repos.demandRepo.save(demand);
     await this.repos.contractRepo.save(contract);
+
+    const transaction = BlockchainTransaction.create({
+      txHash: input.txHash,
+      contractAddress: input.contractAddress,
+      method: "CONFIRM_DEMAND",
+      status: data?.status == 1 ? "CONFIRMED" : "FAILED",
+    });
+    await this.repos.transactionRepo.create(transaction);
 
     return DemandMapper.toDto(demand);
   }

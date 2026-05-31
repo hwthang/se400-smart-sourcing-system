@@ -8,11 +8,14 @@ import { DemandRepository } from "../../repositories/demand.repo";
 import { SourcingSystemService } from "../../../infrastructure/blockchain/services/sourcing-system.service";
 import { UserRepository } from "../../repositories/user.repo";
 import { ethers } from "ethers";
+import { BlockchainTransactionRepository } from "../../repositories/blockchain-transaction.repo";
+import { BlockchainTransaction } from "../../../domain/entities/blockchain-transaction.entity";
 
 type DeployContractRepos = {
   contractRepo: ContractRepository;
   demandRepo: DemandRepository;
   userRepo: UserRepository;
+  transactionRepo: BlockchainTransactionRepository;
 };
 
 type DeployContractUseCaseInput = {
@@ -97,9 +100,18 @@ export class DeployContractUseCase {
           defectPenaltyRate: contract.penaltyRates.defect,
         });
 
+      const transaction = BlockchainTransaction.create({
+        txHash: receipt.txHash,
+        contractAddress: receipt.contractAddress,
+        method: "DELOY_CONTRACT",
+        status: receipt.status == 1 ? "CONFIRMED" : "FAILED",
+      });
+
       contract.deploy(externalId, receipt.contractAddress);
 
       const updatedContract = await this.repos.contractRepo.save(contract);
+
+      await this.repos.transactionRepo.create(transaction);
 
       return ContractMapper.toDto(updatedContract);
     } catch (error) {

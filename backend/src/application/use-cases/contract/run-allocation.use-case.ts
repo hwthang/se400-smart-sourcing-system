@@ -19,6 +19,9 @@ import { BuyerCriteriaRepository } from "../../repositories/buyer-criteria.repo"
 import { ProcurementContractService } from "../../../infrastructure/blockchain/services/procurement-contract.service";
 import { UserRepository } from "../../repositories/user.repo";
 import { ethers } from "ethers";
+import { PrecisionHelper } from "../../../utils/precision-helper";
+import { BlockchainTransaction } from "../../../domain/entities/blockchain-transaction.entity";
+import { BlockchainTransactionRepository } from "../../repositories/blockchain-transaction.repo";
 
 type RunAllocationRepos = {
   contractRepo: ContractRepository;
@@ -28,6 +31,7 @@ type RunAllocationRepos = {
   orderRepo: OrderRepository;
   registrationRepo: SupplierRegistrationRepository;
   userRepo: UserRepository;
+  transactionRepo: BlockchainTransactionRepository;
 };
 
 type RunAllocationUseCaseInput = {
@@ -89,16 +93,16 @@ export class RunAllocationUseCase {
 
       const contractData: ContractData = {
         Q: demand.requestedQuantity,
-        priceW: Number(
-          Number(contract.evaluationWeights.price / 10000).toFixed(10),
+        priceW: +Number(contract.evaluationWeights.price / 100).toFixed(4),
+
+        leadTimeW: +Number(contract.evaluationWeights.leadTime / 100).toFixed(
+          4,
         ),
-        leadTimeW: Number(
-          Number(contract.evaluationWeights.leadTime / 10000).toFixed(10),
-        ),
-        defectW: Number(
-          Number(contract.evaluationWeights.defect / 10000).toFixed(10),
-        ),
+
+        defectW: +Number(contract.evaluationWeights.defect / 100).toFixed(4),
       };
+
+      console.log(contractData);
 
       const quotations =
         await this.repos.quotationRepo.findAllQuotationsOfContract(
@@ -162,15 +166,14 @@ export class RunAllocationUseCase {
           reversedP: 0,
           L: quotation?._maxLeadTimeDays,
           reversedL: 0,
-          R: Number(Number(quotation?._maxDefectRate / 10000).toFixed(10)),
+          R: +Number(quotation?._maxDefectRate / 100).toFixed(4),
           reversedR: 0,
           S: 0,
           minQS: quotation?._minSupplyQuantity,
           maxQS: quotation?._maxSupplyQuantity,
           minQB: criteria?._minPurchaseQuantity,
-          c: Number(
-            Number(criteria?._maxAllocationPercent / 10000).toFixed(10),
-          ),
+          c: +Number(criteria?._maxAllocationPercent / 100).toFixed(4),
+
           minQ: 0,
           Q: 0,
           estimatedAmount: 0,
@@ -211,12 +214,19 @@ export class RunAllocationUseCase {
 
           if (result.status === 1) {
             order.confirm();
+            const transaction = BlockchainTransaction.create({
+              txHash: result.txHash,
+              contractAddress: contract.address,
+              method: "CREATE_ORDER",
+              status: result?.status == 1 ? "CONFIRMED" : "FAILED",
+            });
+            await this.repos.transactionRepo.create(transaction);
           }
 
           await this.repos.orderRepo.save(order);
 
           // ⛔ IMPORTANT: delay 3s giữa mỗi tx
-          await sleep(3000);
+          await sleep(5000);
         } catch (err) {
           console.log("createOrder failed:", err);
 
@@ -225,6 +235,7 @@ export class RunAllocationUseCase {
         }
       }
       contract.markAllocated(allocationResult.requiredDepositedAmount);
+      console.log(allocationResult.requiredDepositedAmount);
       await this.repos.contractRepo.save(contract);
     } catch (error) {
       console.error("RunAllocationUseCase error:", error);

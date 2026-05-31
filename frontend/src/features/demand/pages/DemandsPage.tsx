@@ -210,7 +210,7 @@ const DemandListPage = () => {
                         <span>
                           {new Date(
                             item.requestedDeliveryDate,
-                          ).toLocaleDateString()}
+                          ).toLocaleDateString("vi-VN")}
                         </span>
                       </div>
                     </td>

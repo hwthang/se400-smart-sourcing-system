@@ -20,7 +20,7 @@ import { ReleaseSupplierPaymentUseCase } from "../../application/use-cases/order
 // REPOSITORIES
 // =========================================================
 
-const { orderRepo, registrationRepo, contractRepo, demandRepo, userRepo } =
+const { orderRepo, registrationRepo, contractRepo, demandRepo, userRepo, transactionRepo } =
   repositories;
 
 // =========================================================
@@ -49,6 +49,7 @@ const completeDeliveryUseCase = new CompleteDeliveryUseCase({
   registrationRepo,
   contractRepo,
   userRepo,
+  transactionRepo
 });
 
 const completeInspectionUseCase = new CompleteInspectionUseCase({
@@ -56,6 +57,7 @@ const completeInspectionUseCase = new CompleteInspectionUseCase({
   registrationRepo,
   contractRepo,
   userRepo,
+  transactionRepo
 });
 
 const releaseSupplierPaymentUseCase = new ReleaseSupplierPaymentUseCase({
@@ -63,6 +65,7 @@ const releaseSupplierPaymentUseCase = new ReleaseSupplierPaymentUseCase({
   registrationRepo,
   contractRepo,
   userRepo,
+  transactionRepo
 });
 
 // =========================================================

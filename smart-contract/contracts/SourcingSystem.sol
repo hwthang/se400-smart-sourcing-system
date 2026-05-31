@@ -109,7 +109,7 @@ contract SourcingSystem {
         uint16 priceWeight,
         uint16 defectWeight,
         uint16 leadTimeWeight,
-        uint16 delayPenaltyRate,
+        uint256 delayPenaltyRate,
         uint16 defectPenaltyRate
     ) external onlyOwner uniqueExternalId(externalId) {
         // =========================================================

@@ -5,14 +5,16 @@ import { ContractRepository } from "../../repositories/contract.repo";
 import { OrderRepository } from "../../repositories/order.repo";
 import { SupplierRegistrationRepository } from "../../repositories/supplier-registration.repo";
 import { UserRepository } from "../../repositories/user.repo";
+import { BlockchainTransactionRepository } from "../../repositories/blockchain-transaction.repo";
+import { BlockchainTransaction } from "../../../domain/entities/blockchain-transaction.entity";
 
 type ReleaseSupplierPaymentUseCaseRepos = {
   contractRepo: ContractRepository;
   orderRepo: OrderRepository;
   userRepo: UserRepository;
   registrationRepo: SupplierRegistrationRepository;
+  transactionRepo: BlockchainTransactionRepository;
 };
-
 
 type ReleaseSupplierPaymentUseCaseInput = {
   txHash: string;
@@ -20,9 +22,7 @@ type ReleaseSupplierPaymentUseCaseInput = {
 };
 
 export class ReleaseSupplierPaymentUseCase {
-  constructor(
-    private readonly repos: ReleaseSupplierPaymentUseCaseRepos,
-  ) {}
+  constructor(private readonly repos: ReleaseSupplierPaymentUseCaseRepos) {}
 
   async execute(input: ReleaseSupplierPaymentUseCaseInput) {
     const decoder = ProcurementContractService.create(input.contractAddress);
@@ -59,13 +59,21 @@ export class ReleaseSupplierPaymentUseCase {
 
     const amount = data.logs[0].args[1];
 
-    const ethAmount = Number(amount);
+    const amountEth = Number(ethers.formatEther(amount));
 
-    order.complete(ethAmount);
+    order.complete(amountEth);
 
     await this.repos.orderRepo.save(order);
 
     const updatedOrder = await this.repos.orderRepo.save(order);
+
+    const transaction = BlockchainTransaction.create({
+      txHash: input.txHash,
+      contractAddress: input.contractAddress,
+      method: "RELEASE_PAYMENT",
+      status: data?.status == 1 ? "CONFIRMED" : "FAILED",
+    });
+    await this.repos.transactionRepo.create(transaction);
 
     return OrderMapper.toDto(updatedOrder);
   }

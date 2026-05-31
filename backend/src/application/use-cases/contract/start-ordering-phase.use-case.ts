@@ -4,11 +4,14 @@ import { ContractRepository } from "../../repositories/contract.repo";
 import { ContractMapper } from "../../../infrastructure/persistence/mappers/contract.mapper";
 import { DemandRepository } from "../../repositories/demand.repo";
 import { SupplierQuotationRepository } from "../../repositories/supplier-quotation.repo";
+import { BlockchainTransaction } from "../../../domain/entities/blockchain-transaction.entity";
+import { BlockchainTransactionRepository } from "../../repositories/blockchain-transaction.repo";
 
 type StartOrderingPhaseUseCaseRepos = {
   contractRepo: ContractRepository;
   demandRepo: DemandRepository;
   quotationRepo: SupplierQuotationRepository;
+  transactionRepo: BlockchainTransactionRepository;
 };
 
 type StartOrderingPhaseUseCaseInput = {
@@ -49,6 +52,14 @@ export class StartOrderingPhaseUseCase {
     );
 
     const updatedContract = await this.repos.contractRepo.save(contract);
+
+    const transaction = BlockchainTransaction.create({
+      txHash: input.txHash,
+      contractAddress: input.contractAddress,
+      method: "START_ORDERING",
+      status: data?.status == 1 ? "CONFIRMED" : "FAILED",
+    });
+    await this.repos.transactionRepo.create(transaction);
 
     return ContractMapper.toDto(updatedContract);
   }

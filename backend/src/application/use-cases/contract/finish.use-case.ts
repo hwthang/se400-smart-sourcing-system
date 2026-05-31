@@ -1,13 +1,12 @@
+import { BlockchainTransaction } from "../../../domain/entities/blockchain-transaction.entity";
 import { ProcurementContractService } from "../../../infrastructure/blockchain/services/procurement-contract.service";
 import { ContractMapper } from "../../../infrastructure/persistence/mappers/contract.mapper";
+import { BlockchainTransactionRepository } from "../../repositories/blockchain-transaction.repo";
 import { ContractRepository } from "../../repositories/contract.repo";
 
 type FinishUseCaseRepos = {
   contractRepo: ContractRepository;
-};
-
-type FinishUseCaseServices = {
-  procurementContractService: ProcurementContractService;
+  transactionRepo: BlockchainTransactionRepository;
 };
 
 type FinishUseCaseInput = {
@@ -33,6 +32,13 @@ export class FinishUseCase {
     contract.markCompleted();
 
     const updatedContract = await this.repos.contractRepo.save(contract);
+    const transaction = BlockchainTransaction.create({
+      txHash: input.txHash,
+      contractAddress: input.contractAddress,
+      method: "FINISH_CONTRACT",
+      status: data?.status == 1 ? "CONFIRMED" : "FAILED",
+    });
+    await this.repos.transactionRepo.create(transaction);
 
     return ContractMapper.toDto(updatedContract);
   }

@@ -1,6 +1,8 @@
+import { BlockchainTransaction } from "../../../domain/entities/blockchain-transaction.entity";
 import { ProcurementContractService } from "../../../infrastructure/blockchain/services/procurement-contract.service";
 import { ContractMapper } from "../../../infrastructure/persistence/mappers/contract.mapper";
 import { OrderMapper } from "../../../infrastructure/persistence/mappers/order.mapper";
+import { BlockchainTransactionRepository } from "../../repositories/blockchain-transaction.repo";
 import { BuyerCriteriaRepository } from "../../repositories/buyer-criteria.repo";
 import { ContractRepository } from "../../repositories/contract.repo";
 import { OrderRepository } from "../../repositories/order.repo";
@@ -12,6 +14,7 @@ type CompleteDeliveryUseCaseRepos = {
   registrationRepo: SupplierRegistrationRepository;
   orderRepo: OrderRepository;
   userRepo: UserRepository;
+  transactionRepo: BlockchainTransactionRepository;
 };
 
 type CompleteDeliveryUseCaseInput = {
@@ -66,6 +69,14 @@ export class CompleteDeliveryUseCase {
     await this.repos.orderRepo.save(order);
 
     const updatedOrder = await this.repos.orderRepo.save(order);
+
+    const transaction = BlockchainTransaction.create({
+      txHash: input.txHash,
+      contractAddress: input.contractAddress,
+      method: "CONFIRM_DEMAND",
+      status: data?.status == 1 ? "CONFIRMED" : "FAILED",
+    });
+    await this.repos.transactionRepo.create(transaction);
 
     return OrderMapper.toDto(updatedOrder);
   }

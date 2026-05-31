@@ -20,7 +20,7 @@ const OrderSchema = new Schema<OrderDocument>(
   {
     registrationId: { type: String, required: true, unique: true },
     // DATABASE CONSTRAINTS: Enforce business rules at persistence layer
-    allocationScore: { type: Number, required: true, min: 0, max: 100 },
+    allocationScore: { type: Number, required: true },
     assignedQuantity: { type: Number, required: true, min: 1 },
     estimatedAmount: { type: Number, required: true, min: 0, default: 0 },
     deliveryDate: { type: Date, required: true },
@@ -36,7 +36,7 @@ const OrderSchema = new Schema<OrderDocument>(
   {
     timestamps: true, // Auto-manage createdAt and updatedAt
     versionKey: false,
-  }
+  },
 );
 
 export const OrderModel = mongoose.model<OrderDocument>("Order", OrderSchema);

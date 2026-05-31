@@ -12,8 +12,12 @@ type Props = {
 const BuyerCriteriaItem = ({ registration, contract }: Props) => {
   const criteria = registration?.criteria;
 
+  // Trạng thái criteria đã được xác thực on-chain hay chưa
+  const isConfirmed =
+    criteria?.status === "CONFIRMED" || criteria?.status === "ACTIVE";
+
   // =========================================================
-  // CONDITIONAL RENDER: EMPTY STATE
+  // 1. TRẠNG THÁI TRỐNG (EMPTY STATE)
   // =========================================================
   if (!criteria) {
     return (
@@ -27,47 +31,38 @@ const BuyerCriteriaItem = ({ registration, contract }: Props) => {
             </h3>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">
-            No allocation criteria has been created for this supplier
-            registration record.
+            No allocation criteria has been created for this supplier registration record.
           </p>
         </div>
 
-        {/* EMPTY VISUAL */}
-        <div className="rounded-md bg-blue-50/50 border border-blue-100/60 p-6 text-center space-y-2">
-          <p className="text-sm font-bold text-blue-900">
+        {/* EMPTY VISUAL - Cấu trúc phẳng hoàn toàn không dùng Border */}
+        <div className="rounded-md bg-blue-50/40 p-6 text-center space-y-2">
+          <p className="text-sm font-bold text-blue-800">
             Buyer Criteria Not Initialized
           </p>
           <p className="text-xs text-gray-500 max-w-md mx-auto leading-relaxed">
-            Configure procurement allocation constraints, basis point percentage
-            thresholds, and smart sourcing filters for this supplier.
+            Configure procurement allocation constraints, percentage thresholds, and smart sourcing filters for this supplier.
           </p>
         </div>
 
         {/* ACTION */}
-        <div className="flex justify-end border-t border-gray-50 pt-4">
+        <div className="flex justify-end pt-2">
           <CreateBuyerCriteriaButton registration={registration} />
         </div>
       </div>
     );
   }
 
-  // =========================================================
-  // KINH NGHIỆM ĐỒNG BỘ: CHUYỂN ĐỔI CHUẨN CƠ SỐ 10000 -> % VISUAL
-  // =========================================================
-  const rawAllocation = Number(criteria?.maxAllocationPercent || 0);
-  const allocationPercent = (rawAllocation / 100).toFixed(2);
-
-  // Kiểm tra xem trạng thái criteria đã được xác thực on-chain hay chưa
-  const isConfirmed =
-    criteria?.status === "CONFIRMED" || criteria?.status === "ACTIVE";
+  // Lấy trực tiếp giá trị số thập phân từ form (không chia 100 theo yêu cầu nút Input mới)
+  const allocationPercent = Number(criteria?.maxAllocationPercent || 0).toFixed(2);
 
   // =========================================================
-  // CONDITIONAL RENDER: FILLED STATE
+  // 2. TRẠNG THÁI ĐÃ CÓ DỮ LIỆU (FILLED STATE)
   // =========================================================
   return (
     <div className="rounded-md bg-white p-4 md:p-6 shadow-sm space-y-6 text-left">
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-50 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <ClipboardCheck className="w-5 h-5 text-blue-800" strokeWidth={2} />
@@ -76,17 +71,16 @@ const BuyerCriteriaItem = ({ registration, contract }: Props) => {
             </h3>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">
-            Procurement allocation constraints and mathematical purchasing
-            strategies defined for automation.
+            Procurement allocation constraints and mathematical purchasing strategies defined for automation.
           </p>
         </div>
 
-        {/* STATUS BADGE */}
+        {/* STATUS BADGE - Loại bỏ màu ngoại lai, đồng bộ token Blue-800/Blue-50 */}
         <div
-          className={`self-start sm:self-center rounded px-2.5 py-1 text-xs font-bold tracking-wide uppercase font-mono border ${
+          className={`self-start sm:self-center rounded-md px-2.5 py-1 text-xs font-bold tracking-wide uppercase font-mono ${
             isConfirmed
-              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-              : "bg-amber-50 text-amber-800 border-amber-200"
+              ? "bg-blue-800 text-white shadow-sm"
+              : "bg-blue-50 text-blue-800"
           }`}
         >
           {criteria?.status || "PENDING"}
@@ -96,44 +90,44 @@ const BuyerCriteriaItem = ({ registration, contract }: Props) => {
       {/* METRICS DATA GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* MIN PURCHASE QUANTITY CARD */}
-        <div className="rounded-md border border-slate-100 bg-gradient-to-br from-white to-slate-50/50 p-4 shadow-2xs space-y-2.5">
+        <div className="rounded-md bg-gradient-to-br from-white to-blue-50/40 p-4 shadow-sm transition-all duration-200 hover:shadow-md space-y-2">
           <div className="flex items-center gap-2">
             <Package className="w-4 h-4 text-blue-800" strokeWidth={2} />
             <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
               Min Purchase Quantity
             </p>
           </div>
-          <p className="text-2xl font-black text-slate-900 tracking-tight">
+          <p className="text-2xl font-bold text-gray-900 tracking-tight">
             {Number(criteria?.minPurchaseQuantity || 0).toLocaleString()}{" "}
-            <span className="text-xs font-medium text-gray-400">units</span>
+            <span className="text-xs font-medium text-gray-500">units</span>
           </p>
-          <p className="text-xs text-gray-400 leading-relaxed">
+          <p className="text-xs text-gray-500 leading-relaxed">
             Minimum required payload volume for execution optimization.
           </p>
         </div>
 
         {/* MAX ALLOCATION PERCENT CARD */}
-        <div className="rounded-md border border-slate-100 bg-gradient-to-br from-white to-slate-50/50 p-4 shadow-2xs space-y-2.5">
+        <div className="rounded-md bg-gradient-to-br from-white to-blue-50/40 p-4 shadow-sm transition-all duration-200 hover:shadow-md space-y-2">
           <div className="flex items-center gap-2">
             <Percent className="w-4 h-4 text-blue-800" strokeWidth={2} />
             <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
               Max Allocation Percent
             </p>
           </div>
-          <p className="text-2xl font-black bg-gradient-to-r from-blue-900 to-indigo-700 bg-clip-text text-transparent tracking-tight">
+          {/* Text Gradient độc quyền cho Metric lớn */}
+          <p className="text-2xl font-bold bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent tracking-tight">
             {allocationPercent}%
           </p>
-          <div className="flex items-center gap-1.5 text-xs font-mono text-slate-400">
-            <Layers className="w-3.5 h-3.5 text-slate-300" />
-            <span>On-Chain Value: {rawAllocation} / 10000</span>
+          <div className="flex items-center gap-1 text-xs font-mono text-gray-500">
+            <Layers className="w-3.5 h-3.5 text-gray-500" />
+            <span>Direct Parameter Configured</span>
           </div>
         </div>
       </div>
 
       {/* ACTION CONTROLS BLOCK */}
-      <div className="border-t border-gray-100 pt-5 flex flex-wrap justify-end items-center gap-2">
-        {/* CHỈ CHO PHÉP CHỈNH SỬA NẾU CHƯA CONFIRM KHÓA DỮ LIỆU */}
-        {!isConfirmed && (
+      <div className="pt-2 flex flex-wrap justify-end items-center gap-2">
+        {!isConfirmed ? (
           <>
             <UpdateBuyerCriteriaButton
               criteriaId={criteria?.id}
@@ -149,13 +143,13 @@ const BuyerCriteriaItem = ({ registration, contract }: Props) => {
               contract={contract}
             />
           </>
-        )}
-
-        {isConfirmed && (
-          <p className="text-xs font-medium text-emerald-700 bg-emerald-50/50 border border-emerald-100 px-3 py-1.5 rounded-md">
-            ✓ Records sealed on decentralized storage ledger. Parameters
-            immutable.
-          </p>
+        ) : (
+          /* Khối thông báo thành công dạng phẳng (Subtle Alert Banner) */
+          <div className="flex items-center gap-2 bg-blue-50 p-3 rounded-md w-full sm:w-auto">
+            <span className="text-xs font-medium text-blue-800">
+              ✓ Records sealed on decentralized storage ledger. Parameters immutable.
+            </span>
+          </div>
         )}
       </div>
     </div>

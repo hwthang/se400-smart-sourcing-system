@@ -60,7 +60,7 @@ contract ProcurementContract {
 
     /// @dev Penalty rates applied for non-performance (basis points)
     struct PenaltyRates {
-        uint16 delayPenaltyRate; // Penalty per day or per unit of delay
+        uint256 delayPenaltyRate; // Penalty ETH per day or per unit of delay
         uint16 qualityPenaltyRate; // Penalty per defect basis point above threshold
     }
 
@@ -185,7 +185,7 @@ contract ProcurementContract {
         uint16 priceWeight,
         uint16 defectWeight,
         uint16 leadTimeWeight,
-        uint16 delayPenaltyRate,
+        uint256 delayPenaltyRate,
         uint16 defectPenaltyRate
     ) {
         owner = _owner;
@@ -494,6 +494,15 @@ contract ProcurementContract {
      */
     function finish() external onlyBuyer atExecutingPhase {
         currentPhase = ContractPhase.COMPLETED;
+
         emit PhaseChanged(currentPhase);
+
+        uint256 remainingBalance = address(this).balance;
+
+        if (remainingBalance > 0) {
+            (bool success, ) = payable(buyer).call{value: remainingBalance}("");
+
+            require(success, "Refund failed");
+        }
     }
 }

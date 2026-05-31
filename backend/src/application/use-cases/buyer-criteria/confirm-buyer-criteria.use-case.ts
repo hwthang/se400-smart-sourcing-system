@@ -1,9 +1,11 @@
+import { BlockchainTransaction } from "../../../domain/entities/blockchain-transaction.entity";
 import { BuyerCriteria } from "../../../domain/entities/buyer-criteria.entity";
 import { BuyerCriteriaStatus } from "../../../domain/enums/buyer-criteria-status.enum";
 import { SupplierQuotationStatus } from "../../../domain/enums/supplier-quotation-status.enum";
 import { SupplierRegistrationStatus } from "../../../domain/enums/supplier-registration-status.enum";
 import { ProcurementContractService } from "../../../infrastructure/blockchain/services/procurement-contract.service";
 import { ContractMapper } from "../../../infrastructure/persistence/mappers/contract.mapper";
+import { BlockchainTransactionRepository } from "../../repositories/blockchain-transaction.repo";
 import { BuyerCriteriaRepository } from "../../repositories/buyer-criteria.repo";
 import { ContractRepository } from "../../repositories/contract.repo";
 import { SupplierRegistrationRepository } from "../../repositories/supplier-registration.repo";
@@ -14,6 +16,7 @@ type ConfirmBuyerCriteriaUseCaseRepos = {
   registrationRepo: SupplierRegistrationRepository;
   criteriaRepo: BuyerCriteriaRepository;
   userRepo: UserRepository;
+  transactionRepo: BlockchainTransactionRepository;
 };
 
 type ConfirmBuyerCriteriaUseCaseInput = {
@@ -69,10 +72,8 @@ export class ConfirmBuyerCriteriaUseCase {
       (item) => item.status == BuyerCriteriaStatus.CONFIRMED,
     );
 
-    
-    const allRegistrations = await this.repos.registrationRepo.findAllByContractId(
-      contract.id!,
-    );
+    const allRegistrations =
+      await this.repos.registrationRepo.findAllByContractId(contract.id!);
 
     const confirmedRegistrations = allRegistrations.filter(
       (item) => item.status == SupplierRegistrationStatus.CONFIRMED,
@@ -83,6 +84,14 @@ export class ConfirmBuyerCriteriaUseCase {
     }
 
     const updatedContract = await this.repos.contractRepo.save(contract);
+
+    const transaction = BlockchainTransaction.create({
+      txHash: input.txHash,
+      contractAddress: input.contractAddress,
+      method: "CONFIRM_CRITERIA",
+      status: data?.status == 1 ? "CONFIRMED" : "FAILED",
+    });
+    await this.repos.transactionRepo.create(transaction);
 
     return ContractMapper.toDto(updatedContract);
   }

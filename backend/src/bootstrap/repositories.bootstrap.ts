@@ -13,6 +13,7 @@ import { MongoSupplierRegistrationRepository } from "../infrastructure/persisten
 import { MongoBuyerCriteriaRepository } from "../infrastructure/persistence/repositories/mongo-buyer-criteria.repo";
 
 import { MongoOrderRepository } from "../infrastructure/persistence/repositories/mongo-order.repo";
+import { MongoBlockchainTransactionRepository } from "../infrastructure/persistence/repositories/mongo-blockchain-transaction.repo";
 
 // =========================================================
 // USER
@@ -56,6 +57,9 @@ const criteriaRepo = new MongoBuyerCriteriaRepository();
 
 const orderRepo = new MongoOrderRepository();
 
+
+const transactionRepo = new MongoBlockchainTransactionRepository()
+
 // =========================================================
 // EXPORT CONTAINER
 // =========================================================
@@ -74,4 +78,5 @@ export const repositories = {
   criteriaRepo,
 
   orderRepo,
+  transactionRepo
 };

@@ -205,12 +205,12 @@ const SupplierQuotationItem = ({
                 ? Number(quotation.unitPrice).toLocaleString()
                 : "0"}{" "}
               <span className="text-xs font-sans font-normal text-slate-400 select-none">
-                wei
+                ETH
               </span>
             </p>
 
             <p className="text-[11px] text-gray-400">
-              Pricing amount denominated in Wei.
+              Pricing amount denominated in ETH.
             </p>
           </div>
         </div>
@@ -306,7 +306,7 @@ const SupplierQuotationItem = ({
               {/* Chia cho 100 để trả lại định dạng %, dùng toFixed(2) để cố định 2 chữ số thập phân */}
               {quotation?.maxDefectRate !== undefined &&
               quotation?.maxDefectRate !== null
-                ? (Number(quotation.maxDefectRate) / 100).toFixed(2)
+                ? (Number(quotation.maxDefectRate)).toFixed(2)
                 : "0.00"}
               %
             </p>

@@ -27,6 +27,7 @@ const {
   contractRepo,
 
   demandRepo,
+  transactionRepo
 } = repositories;
 
 // =========================================================
@@ -75,6 +76,7 @@ const confirmQuotationUseCase = new ConfirmSupplierQuotationUseCase({
   contractRepo,
   registrationRepo,
   quotationRepo,
+  transactionRepo
 });
 // =========================================================
 // CONTROLLER

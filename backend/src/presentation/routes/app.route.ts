@@ -9,40 +9,24 @@ import { createBuyerCriteriaRoute } from "./buyer-criteria.route";
 import { createSupplierRegistrationRoute } from "./supplier-registration.route";
 import { createOrderRoute } from "./order.route";
 import { createAuthRoute } from "./auth.route";
+import { createBlockchainTransactionRoute } from "./blockchain-transaction.route";
 
-export const createAppRoute = (
-  controllers: any,
-) => {
+export const createAppRoute = (controllers: any) => {
   const router = Router();
 
-  router.use(
-    "/auth",
-    createAuthRoute(
-      controllers.authController,
-    ),
-  );
+  router.use("/auth", createAuthRoute(controllers.authController));
 
   // =========================================================
   // CONTRACTS
   // =========================================================
 
-  router.use(
-    "/contracts",
-    createContractRoute(
-      controllers.contractController,
-    ),
-  );
+  router.use("/contracts", createContractRoute(controllers.contractController));
 
   // =========================================================
   // DEMANDS
   // =========================================================
 
-  router.use(
-    "/demands",
-    createDemandRoute(
-      controllers.demandController,
-    ),
-  );
+  router.use("/demands", createDemandRoute(controllers.demandController));
 
   // =========================================================
   // QUOTATIONS
@@ -50,9 +34,7 @@ export const createAppRoute = (
 
   router.use(
     "/supplier-quotations",
-    createSupplierQuotationRoute(
-      controllers.supplierQuotationController,
-    ),
+    createSupplierQuotationRoute(controllers.supplierQuotationController),
   );
 
   // =========================================================
@@ -61,9 +43,7 @@ export const createAppRoute = (
 
   router.use(
     "/buyer-criteria",
-    createBuyerCriteriaRoute(
-      controllers.buyerCriteriaController,
-    ),
+    createBuyerCriteriaRoute(controllers.buyerCriteriaController),
   );
 
   // =========================================================
@@ -72,19 +52,19 @@ export const createAppRoute = (
 
   router.use(
     "/supplier-registrations",
-    createSupplierRegistrationRoute(
-      controllers.supplierRegistrationController,
-    ),
+    createSupplierRegistrationRoute(controllers.supplierRegistrationController),
   );
 
   // =========================================================
   // ORDERS
   // =========================================================
 
+  router.use("/orders", createOrderRoute(controllers.orderController));
+
   router.use(
-    "/orders",
-    createOrderRoute(
-      controllers.orderController,
+    "/blockchain-transactions",
+    createBlockchainTransactionRoute(
+      controllers.blockchainTransactionController
     ),
   );
 

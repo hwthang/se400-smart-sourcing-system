@@ -22,7 +22,7 @@ import { ConfirmDemandUseCase } from "../../application/use-cases/demand/confirm
 // REPOSITORIES
 // =========================================================
 
-const { demandRepo, userRepo, contractRepo } = repositories;
+const { demandRepo, userRepo, contractRepo, transactionRepo } = repositories;
 
 // =========================================================
 // USE CASES
@@ -55,7 +55,7 @@ const assignEmployeeUseCase = new AssignEmployeeUseCase({
 const getDemandDetailUseCase = new GetDemandDetailUseCase({
   demandRepo,
   userRepo,
-  contractRepo
+  contractRepo,
 });
 
 const getDemandListUseCase = new GetDemandListUseCase({ demandRepo, userRepo });
@@ -63,6 +63,7 @@ const getDemandListUseCase = new GetDemandListUseCase({ demandRepo, userRepo });
 const confirmDemandUseCase = new ConfirmDemandUseCase({
   contractRepo,
   demandRepo,
+  transactionRepo,
 });
 
 // =========================================================

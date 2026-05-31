@@ -11,8 +11,8 @@ export const useProcurement = (contractAddress?: string) => {
   };
 
   const success = (txHash: string, msg: string) => {
-    console.log("txHash:", txHash);
-    toast.success(msg);
+    // console.log("txHash:", txHash);
+    // toast.success(msg);
   };
 
   const error = (e: any) => {

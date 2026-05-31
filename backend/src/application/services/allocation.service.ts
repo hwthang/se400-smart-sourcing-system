@@ -41,7 +41,7 @@ export class AllocationService {
   };
 
   calculateReversedValue = (value: number): number => {
-    return Number(Number((1 / value).toFixed(18)));
+    return Number(Number((1 / value).toFixed(4)));
   };
 
   calculateScore = (data: {
@@ -71,7 +71,7 @@ export class AllocationService {
       leadTimeWeight * (reversedL / totalReversedL) +
       defectWeight * (reversedR / totalReversedR);
 
-    return Number(Number(score).toFixed(10));
+    return Number(Number(score).toFixed(4));
   };
 
   calculateAllocatedQuantity = (data: {

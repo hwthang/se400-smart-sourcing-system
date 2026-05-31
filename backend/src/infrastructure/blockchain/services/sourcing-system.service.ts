@@ -1,6 +1,7 @@
 import { ethers } from "ethers";
 import { EthersService } from "./ethers.service";
 import SourcingSystemAbi from "../contracts/sourcing-system/SourcingSystem.json";
+import { PrecisionHelper } from "../../../utils/precision-helper";
 
 type CreateProcurementParams = {
   externalId: string;
@@ -24,7 +25,7 @@ export class SourcingSystemService {
     this.contract = new ethers.Contract(
       process.env.SOURCING_SYSTEM_ADDRESS!,
       SourcingSystemAbi.abi,
-      ethersService.getSigner()
+      ethersService.getSigner(),
     );
   }
 
@@ -35,11 +36,11 @@ export class SourcingSystemService {
     const tx = await this.contract.createProcurementContract(
       params.externalId,
       ethers.getAddress(params.buyer),
-      params.priceWeight,
-      params.defectWeight,
-      params.leadTimeWeight,
-      params.delayPenaltyRate,
-      params.defectPenaltyRate
+      PrecisionHelper.toBasicPointFromPercentage(params.priceWeight),
+      PrecisionHelper.toBasicPointFromPercentage(params.defectWeight),
+      PrecisionHelper.toBasicPointFromPercentage(params.leadTimeWeight),
+      ethers.parseEther(params.delayPenaltyRate.toFixed(4)),
+      PrecisionHelper.toBasicPointFromPercentage(params.defectPenaltyRate),
     );
 
     const receipt = await tx.wait();
@@ -47,9 +48,7 @@ export class SourcingSystemService {
     const event = this.findEvent(receipt, "ProcurementContractCreated");
 
     const contractAddress =
-      event?.args?.contractAddress ??
-      event?.args?.[0] ??
-      null;
+      event?.args?.contractAddress ?? event?.args?.[0] ?? null;
 
     if (contractAddress && !ethers.isAddress(contractAddress)) {
       throw new Error("Invalid contract address from event");
@@ -57,8 +56,10 @@ export class SourcingSystemService {
 
     return {
       txHash: tx.hash,
-      receipt,
+
       contractAddress,
+
+      status: receipt?.status,
     };
   }
 
@@ -67,7 +68,7 @@ export class SourcingSystemService {
   // =========================================================
   async getContractAddress(externalId: string) {
     return this.contract.getProcurementContractByExternalId(
-      ethers.id(externalId)
+      ethers.id(externalId),
     );
   }
 

@@ -335,7 +335,7 @@ const ContractsPage = () => {
                               Price Matrix:
                             </span>
                             <span className="font-bold text-slate-700">
-                              {contract.evaluationWeights?.price/100 || 0}%
+                              {contract.evaluationWeights?.price || 0}%
                             </span>
                           </div>
                           <div className="flex justify-between max-w-[120px]">
@@ -343,7 +343,7 @@ const ContractsPage = () => {
                               Lead Time:
                             </span>
                             <span className="font-bold text-slate-700">
-                              {contract.evaluationWeights?.leadTime/100 || 0}%
+                              {contract.evaluationWeights?.leadTime || 0}%
                             </span>
                           </div>
                           <div className="flex justify-between max-w-[120px]">
@@ -351,7 +351,7 @@ const ContractsPage = () => {
                               Defect Ratio:
                             </span>
                             <span className="font-bold text-slate-700">
-                              {contract.evaluationWeights?.defect/100 || 0}%
+                              {contract.evaluationWeights?.defect || 0}%
                             </span>
                           </div>
                         </div>
@@ -373,7 +373,7 @@ const ContractsPage = () => {
                               Defect Item:
                             </span>
                             <span className="text-rose-700 font-bold">
-                              {contract.penaltyRates?.defect/100 || 0}%
+                              {contract.penaltyRates?.defect || 0}%
                             </span>
                           </div>
                         </div>
@@ -385,7 +385,7 @@ const ContractsPage = () => {
                           {contract.requiredDepositedAmount?.toLocaleString() ||
                             0}
                           <span className="text-[9px] text-slate-400 uppercase ml-1 tracking-wider">
-                            Wei
+                            ETH
                           </span>
                         </div>
                       </td>

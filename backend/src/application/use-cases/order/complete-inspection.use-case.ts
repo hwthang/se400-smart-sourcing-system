@@ -1,5 +1,7 @@
+import { BlockchainTransaction } from "../../../domain/entities/blockchain-transaction.entity";
 import { ProcurementContractService } from "../../../infrastructure/blockchain/services/procurement-contract.service";
 import { OrderMapper } from "../../../infrastructure/persistence/mappers/order.mapper";
+import { BlockchainTransactionRepository } from "../../repositories/blockchain-transaction.repo";
 import { ContractRepository } from "../../repositories/contract.repo";
 import { OrderRepository } from "../../repositories/order.repo";
 import { SupplierRegistrationRepository } from "../../repositories/supplier-registration.repo";
@@ -9,6 +11,7 @@ type CompleteInspectionUseCaseRepos = {
   contractRepo: ContractRepository;
   registrationRepo: SupplierRegistrationRepository;
   orderRepo: OrderRepository;
+  transactionRepo: BlockchainTransactionRepository;
   userRepo: UserRepository;
 };
 
@@ -54,14 +57,21 @@ export class CompleteInspectionUseCase {
     if (!order) throw new Error();
 
     const rate = data.input.args[1];
-
-    const defectRate = Number(rate)
+    const defectRate = Number((Number(rate) / 100).toFixed(2));
 
     order.markInspected(defectRate);
 
     await this.repos.orderRepo.save(order);
 
     const updatedOrder = await this.repos.orderRepo.save(order);
+
+    const transaction = BlockchainTransaction.create({
+      txHash: input.txHash,
+      contractAddress: input.contractAddress,
+      method: "COMPLETE_INSPECTION",
+      status: data?.status == 1 ? "CONFIRMED" : "FAILED",
+    });
+    await this.repos.transactionRepo.create(transaction);
 
     return OrderMapper.toDto(updatedOrder);
   }

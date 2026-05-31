@@ -8,6 +8,7 @@ import { ContractRepository } from "../../repositories/contract.repo";
 import { DemandRepository } from "../../repositories/demand.repo";
 import { EvaluationWeights } from "../../../domain/value-objects/evaluation-weights.vo";
 import { PenaltyRates } from "../../../domain/value-objects/penalty-rates.vo";
+import { PrecisionHelper } from "../../../utils/precision-helper";
 
 type UpdateContractUseCaseRepos = {
   contractRepo: ContractRepository;

@@ -1,18 +1,19 @@
 // components/Feature/Contract/DepositButton.tsx
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Coins, Loader2, ArrowRight, ChevronLeft } from "lucide-react";
 
 import Modal from "../../../../shared/ui/modal/Modal";
 import { useDeposit as useDepositBackend } from "../../hooks/use-contract";
 import { useProcurement } from "../../../../core/blockchain/hooks/useProcurement";
+import { parseEther } from "ethers";
 
 interface DepositButtonProps {
   contract: {
     id: string;
     address: string;
     status: string;
-    requiredDepositedAmount: string; // Số tiền từ backend giả định đã là chuỗi định dạng WEI
+    requiredDepositedAmount: string | number; // Giá trị truyền vào trực tiếp là đơn vị ETH
   };
 }
 
@@ -26,16 +27,27 @@ export const DepositButton = ({ contract }: DepositButtonProps) => {
   const [inputOpen, setInputOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  // Số tiền cố định lấy từ contract, không cho phép chỉnh sửa
-  const fixedAmountWei = contract?.requiredDepositedAmount || "0";
-  const isProcessing = procurement.deposit.isPending || depositBackend.isPending;
+  // Lấy trực tiếp chuỗi hiển thị định dạng ETH
+  const amountEth = contract?.requiredDepositedAmount?.toString() || "0";
+
+  // Chỉ chuyển đổi sang WEI (BigInt) khi cần tương tác gửi nhận với ví Web3 / Smart Contract
+  const amountWei = useMemo(() => {
+    try {
+      return parseEther(amountEth);
+    } catch (e) {
+      return 0n;
+    }
+  }, [amountEth]);
+
+  const isProcessing =
+    procurement.deposit.isPending || depositBackend.isPending;
 
   // =========================================================
   // FLOW CONTROL
   // =========================================================
   const handleContinue = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fixedAmountWei || Number(fixedAmountWei) <= 0) return;
+    if (amountWei <= 0n) return;
 
     setInputOpen(false);
     setConfirmOpen(true);
@@ -43,16 +55,14 @@ export const DepositButton = ({ contract }: DepositButtonProps) => {
 
   const handleConfirm = async () => {
     try {
-      // 1. Gửi trực tiếp số WEI lên Smart Contract
-      const txHash = await procurement.deposit.mutateAsync(
-        BigInt(fixedAmountWei),
-      );
+      // 1. Gửi giá trị BigInt (WEI) lên cấu trúc dữ liệu mạng Blockchain
+      const txHash = await procurement.deposit.mutateAsync(amountWei);
 
-      // 2. Đồng bộ về Backend tập trung (Note gửi chuỗi rỗng)
+      // 2. Đồng bộ về Backend tập trung (Lưu trữ theo định dạng số nguyên WEI)
       await depositBackend.mutateAsync({
         id: contract.id,
         data: {
-          amount: Number(fixedAmountWei),
+          amount: Number(amountWei),
           note: "",
           txHash,
           contractAddress: contract.address,
@@ -67,93 +77,89 @@ export const DepositButton = ({ contract }: DepositButtonProps) => {
 
   return (
     <>
-      {/* BUTTON TRIGGER */}
+      {/* TRIGGER BUTTON */}
       {contract?.status === "FUNDING" && (
         <button
           type="button"
           disabled={isProcessing}
           onClick={() => setInputOpen(true)}
-          className="
-            w-full md:w-auto flex-grow
-            bg-white hover:bg-emerald-50/50
-            text-emerald-700 border border-emerald-200/80
-            rounded-lg px-4 py-2.5 text-xs font-bold uppercase tracking-wider
-            shadow-2xs transition-all duration-200
-            flex items-center justify-center gap-2
-            disabled:opacity-40 disabled:cursor-not-allowed
-            active:scale-[0.98]
-          "
+          className="w-full md:w-auto flex-grow bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white font-medium px-4 py-2.5 rounded-md text-sm shadow-sm transition-all duration-200 hover:shadow-md hover:brightness-110 active:scale-[0.98] flex items-center justify-center gap-2 disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:pointer-events-none"
         >
           {isProcessing ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" strokeWidth={2.5} />
+            <Loader2 className="w-4 h-4 animate-spin text-white" strokeWidth={2} />
           ) : (
-            <Coins className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2.5} />
+            <Coins className="w-4 h-4 text-white" strokeWidth={2} />
           )}
           <span>Deposit Funds</span>
         </button>
       )}
 
-      {/* STEP 1 MODAL: READ-ONLY WEI DISPLAY */}
+      {/* BƯỚC 1 MODAL: HIỂN THỊ ETH TRỰC TIẾP */}
       <Modal
         open={inputOpen}
         onClose={() => !isProcessing && setInputOpen(false)}
         title="Initialize Escrow Funding"
       >
-        <form onSubmit={handleContinue} className="space-y-4 text-left pt-2">
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-              <Coins className="w-3.5 h-3.5 text-slate-400" />
-              Required Deposit Amount (WEI)
+        <form onSubmit={handleContinue} className="space-y-5 text-left pt-2">
+          
+          {/* Chỉ hiển thị duy nhất trường ETH sạch */}
+          <div className="text-left space-y-1.5">
+            <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+              Required Deposit Amount
             </label>
-            
-            {/* Input khóa cứng (readOnly), dùng style disabled nhẹ để báo hiệu không sửa được */}
-            <input
-              type="text"
-              readOnly
-              value={fixedAmountWei}
-              className="w-full bg-slate-50 text-slate-500 font-mono rounded-lg border border-slate-200 px-3 py-2.5 text-sm shadow-2xs focus:outline-none cursor-not-allowed select-all"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                readOnly
+                value={amountEth}
+                className="w-full bg-blue-50/40 text-blue-900 font-mono font-bold rounded-md pl-4 pr-14 py-2.5 text-sm shadow-sm focus:outline-none cursor-not-allowed select-all"
+              />
+              <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-xs font-mono font-bold text-blue-800 pointer-events-none">
+                ETH
+              </span>
+            </div>
           </div>
 
           {/* ACTIONS FOOTER STEP 1 */}
-          <div className="flex flex-col sm:flex-row items-center justify-end gap-2 pt-4 border-t border-slate-100">
+          <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
               onClick={() => setInputOpen(false)}
-              className="w-full sm:w-auto bg-white text-slate-600 border border-slate-200 font-bold px-4 py-2.5 rounded-lg text-xs uppercase tracking-wider transition-all duration-200 hover:bg-slate-50 active:scale-[0.98] shadow-2xs"
+              className="flex items-center justify-center bg-white text-blue-800 font-medium px-4 py-2 rounded-md transition-all duration-200 hover:bg-blue-50 active:scale-[0.98] text-sm"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-850 text-white font-bold px-5 py-2.5 rounded-lg text-xs uppercase tracking-wider transition-all duration-200 hover:brightness-110 active:scale-[0.98] shadow-md"
+              className="flex items-center justify-center gap-2 bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white font-medium px-5 py-2 rounded-md shadow-sm transition-all duration-200 hover:brightness-110 active:scale-[0.98] text-sm"
             >
               <span>Continue</span>
-              <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.5} />
+              <ArrowRight className="w-4 h-4 text-white" strokeWidth={2} />
             </button>
           </div>
         </form>
       </Modal>
 
-      {/* STEP 2 MODAL: QUICK CONFIRM & SIGN */}
+      {/* BƯỚC 2 MODAL: XÁC NHẬN CHỮ KÝ VÍ */}
       <Modal
         open={confirmOpen}
         onClose={() => !isProcessing && setConfirmOpen(false)}
         title="Review Escrow Settlement"
       >
-        <div className="space-y-4 text-left pt-2">
-          {/* FIELD PREVIEWS */}
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 font-medium">
-            <div className="flex flex-col gap-1 text-center py-2">
-              <span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider">Total Blockchain Settlement</span>
-              <p className="text-emerald-700 font-black text-xl font-mono tracking-tight break-all">
-                {fixedAmountWei} <span className="text-xs font-bold text-slate-400">WEI</span>
-              </p>
-            </div>
+        <div className="space-y-5 text-left pt-2">
+          
+          {/* KHỐI HIỂN THỊ TRỰC QUAN ĐƠN VỊ ETH */}
+          <div className="bg-gradient-to-br from-white to-blue-50/30 p-6 rounded-md text-center space-y-1">
+            <span className="text-gray-400 font-bold text-xs uppercase tracking-wider">
+              Total Blockchain Escrow Funding
+            </span>
+            <p className="text-gray-900 font-bold text-2xl font-mono tracking-tight break-all">
+              {amountEth} <span className="text-sm font-bold text-gray-400">ETH</span>
+            </p>
           </div>
 
           {/* ACTIONS FOOTER STEP 2 */}
-          <div className="flex flex-col sm:flex-row items-center justify-end gap-2 pt-2">
+          <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
               disabled={isProcessing}
@@ -161,32 +167,26 @@ export const DepositButton = ({ contract }: DepositButtonProps) => {
                 setConfirmOpen(false);
                 setInputOpen(true);
               }}
-              className="w-full sm:w-auto flex items-center justify-center gap-1.5 bg-white text-slate-600 border border-slate-200 font-bold px-4 py-2.5 rounded-lg text-xs uppercase tracking-wider transition-all duration-200 hover:bg-slate-50 active:scale-[0.98] disabled:opacity-40 shadow-2xs"
+              className="flex items-center justify-center gap-1 bg-white text-blue-800 font-medium px-4 py-2 rounded-md transition-all duration-200 hover:bg-blue-50 active:scale-[0.98] disabled:opacity-30 disabled:pointer-events-none text-sm"
             >
-              <ChevronLeft className="w-3.5 h-3.5" strokeWidth={2.5} />
+              <ChevronLeft className="w-4 h-4 text-current" strokeWidth={2} />
               <span>Back</span>
             </button>
+            
             <button
               type="button"
               disabled={isProcessing}
               onClick={handleConfirm}
-              className="
-                w-full sm:w-auto flex items-center justify-center gap-2 
-                bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-950 
-                text-white font-bold px-5 py-2.5 rounded-lg shadow-md 
-                transition-all duration-200 hover:brightness-110 hover:shadow-lg 
-                active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40
-                text-xs uppercase tracking-wider
-              "
+              className="flex items-center justify-center gap-2 bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white font-medium px-5 py-2 rounded-md shadow-sm transition-all duration-200 hover:brightness-110 active:scale-[0.98] text-sm disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:pointer-events-none"
             >
               {isProcessing ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 text-white animate-spin" strokeWidth={2.5} />
+                  <Loader2 className="w-4 h-4 text-white animate-spin" strokeWidth={2} />
                   <span>Broadcasting Tx...</span>
                 </>
               ) : (
                 <>
-                  <Coins className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+                  <Coins className="w-4 h-4 text-white" strokeWidth={2} />
                   <span>Sign & Deposit</span>
                 </>
               )}

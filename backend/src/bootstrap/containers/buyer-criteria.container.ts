@@ -21,6 +21,7 @@ const {
   contractRepo,
 
   demandRepo,
+  transactionRepo,
   userRepo,
 } = repositories;
 
@@ -53,6 +54,7 @@ const confirmCriteriaUseCase = new ConfirmBuyerCriteriaUseCase({
   registrationRepo,
   criteriaRepo,
   userRepo,
+  transactionRepo,
 });
 
 // =========================================================

@@ -1,9 +1,16 @@
 // pages/Dashboard/Demand/CreateDemandPage.tsx
 
 import React, { useState } from "react";
-import { Plus, Trash2, FilePlus2, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  FilePlus2,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 import Modal from "../../../shared/ui/modal/Modal";
-import { useCreateDemand } from "../hooks/use-demand"; 
+import { useCreateDemand } from "../hooks/use-demand";
 
 interface SpecItem {
   id: string;
@@ -38,7 +45,9 @@ const CreateDemandPage = () => {
   // Giúp chặn toàn bộ các ngày trong quá khứ trực tiếp từ UI lịch nội sinh
   const todayString = new Date().toISOString().split("T")[0];
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -60,22 +69,26 @@ const CreateDemandPage = () => {
     }));
   };
 
-  const handleSpecChange = (id: string, field: "name" | "value", value: string) => {
+  const handleSpecChange = (
+    id: string,
+    field: "name" | "value",
+    value: string,
+  ) => {
     setFormData((prev) => ({
       ...prev,
       specifications: prev.specifications.map((spec) =>
-        spec.id === id ? { ...spec, [field]: value } : spec
+        spec.id === id ? { ...spec, [field]: value } : spec,
       ),
     }));
   };
 
   const handleOpenConfirmation = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Kiểm tra dự phòng bằng Logic thực thi (Validation Guard)
     const selectedDate = new Date(formData.requestedDeliveryDate);
     const todaysDate = new Date(todayString);
-    
+
     if (selectedDate < todaysDate) {
       alert("Target SLA Timeline must be a future operational date.");
       return;
@@ -127,14 +140,14 @@ const CreateDemandPage = () => {
             Create Procurement Demand
           </h1>
           <p className="text-xs md:text-sm text-slate-400 font-medium mt-1">
-            Log dynamic smart-sourcing product requirements and allocation parameters.
+            Log dynamic smart-sourcing product requirements and allocation
+            parameters.
           </p>
         </div>
       </div>
 
       {/* Main Creation Form Block */}
       <form onSubmit={handleOpenConfirmation} className="space-y-6">
-        
         {/* Section: Core Product Details */}
         <div className="bg-white rounded-xl p-5 md:p-6 border border-slate-200/80 shadow-2xs space-y-4">
           <h2 className="text-sm md:text-base font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">
@@ -143,7 +156,9 @@ const CreateDemandPage = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="w-full text-left">
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Product SKU</label>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                Product SKU
+              </label>
               <input
                 type="text"
                 name="sku"
@@ -156,7 +171,9 @@ const CreateDemandPage = () => {
               />
             </div>
             <div className="w-full md:col-span-2 text-left">
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Product Name</label>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                Product Name
+              </label>
               <input
                 type="text"
                 name="name"
@@ -171,7 +188,9 @@ const CreateDemandPage = () => {
           </div>
 
           <div className="w-full text-left">
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Description</label>
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+              Description
+            </label>
             <textarea
               name="description"
               rows={3}
@@ -203,13 +222,16 @@ const CreateDemandPage = () => {
 
           {formData.specifications.length === 0 ? (
             <div className="p-6 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
-              <p className="text-xs font-medium text-slate-400">No specifications added. Click "Add Set" to initialize custom keys.</p>
+              <p className="text-xs font-medium text-slate-400">
+                No specifications added. Click "Add Set" to initialize custom
+                keys.
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
               {formData.specifications.map((spec, index) => (
-                <div 
-                  key={spec.id} 
+                <div
+                  key={spec.id}
                   className="p-4 bg-slate-50/50 rounded-xl border border-slate-100 flex flex-col md:flex-row items-start md:items-center gap-4 relative transition-all"
                 >
                   <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
@@ -222,7 +244,9 @@ const CreateDemandPage = () => {
                         required
                         disabled={isPending}
                         value={spec.name}
-                        onChange={(e) => handleSpecChange(spec.id, "name", e.target.value)}
+                        onChange={(e) =>
+                          handleSpecChange(spec.id, "name", e.target.value)
+                        }
                         className="w-full bg-white text-slate-900 placeholder-slate-400 rounded-lg border border-slate-200 px-3 py-1.5 text-xs shadow-2xs focus:outline-none focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-600/50 transition-all disabled:opacity-40"
                         placeholder="e.g., Material Grade"
                       />
@@ -236,7 +260,9 @@ const CreateDemandPage = () => {
                         required
                         disabled={isPending}
                         value={spec.value}
-                        onChange={(e) => handleSpecChange(spec.id, "value", e.target.value)}
+                        onChange={(e) =>
+                          handleSpecChange(spec.id, "value", e.target.value)
+                        }
                         className="w-full bg-white text-slate-900 placeholder-slate-400 rounded-lg border border-slate-200 px-3 py-1.5 text-xs shadow-2xs focus:outline-none focus:ring-4 focus:ring-indigo-600/10 focus:border-indigo-600/50 transition-all disabled:opacity-40"
                         placeholder="e.g., Titanium G5"
                       />
@@ -265,7 +291,9 @@ const CreateDemandPage = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
             <div className="w-full">
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Requested Quantity</label>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                Requested Quantity
+              </label>
               <input
                 type="number"
                 name="requestedQuantity"
@@ -279,7 +307,9 @@ const CreateDemandPage = () => {
               />
             </div>
             <div className="w-full">
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Requested Delivery Date</label>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                Requested Delivery Date
+              </label>
               <input
                 type="date"
                 name="requestedDeliveryDate"
@@ -307,7 +337,10 @@ const CreateDemandPage = () => {
           >
             {isPending ? (
               <>
-                <Loader2 className="w-4 h-4 text-white animate-spin" strokeWidth={2.5} />
+                <Loader2
+                  className="w-4 h-4 text-white animate-spin"
+                  strokeWidth={2.5}
+                />
                 <span>Processing Network Dispatch...</span>
               </>
             ) : (
@@ -328,41 +361,73 @@ const CreateDemandPage = () => {
       >
         <div className="space-y-4 text-left">
           <div className="flex items-start gap-3 p-3.5 bg-indigo-50/60 border border-indigo-100 rounded-lg text-indigo-950">
-            <AlertCircle className="w-4 h-4 text-indigo-700 shrink-0 mt-0.5" strokeWidth={2.5} />
+            <AlertCircle
+              className="w-4 h-4 text-indigo-700 shrink-0 mt-0.5"
+              strokeWidth={2.5}
+            />
             <p className="text-xs font-medium leading-relaxed">
-              Please inspect procurement criteria thoroughly. Confirmed operational demands trigger automatic supplier route matching logic.
+              Please inspect procurement criteria thoroughly. Confirmed
+              operational demands trigger automatic supplier route matching
+              logic.
             </p>
           </div>
 
           <div className="space-y-3 text-xs md:text-sm font-medium">
             <div>
-              <span className="text-slate-400 block font-bold text-[10px] uppercase tracking-wider mb-0.5">Product Summary</span>
-              <p className="text-slate-900 font-bold">{formData.name || "—"} <span className="text-slate-400 font-mono font-normal">({formData.sku || "No SKU"})</span></p>
+              <span className="text-slate-400 block font-bold text-[10px] uppercase tracking-wider mb-0.5">
+                Product Summary
+              </span>
+              <p className="text-slate-900 font-bold">
+                {formData.name || "—"}{" "}
+                <span className="text-slate-400 font-mono font-normal">
+                  ({formData.sku || "No SKU"})
+                </span>
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 pt-1">
               <div>
-                <span className="text-slate-400 block font-bold text-[10px] uppercase tracking-wider mb-0.5">Requested Output</span>
-                <p className="text-slate-900 font-bold">{formData.requestedQuantity || 0} Units</p>
+                <span className="text-slate-400 block font-bold text-[10px] uppercase tracking-wider mb-0.5">
+                  Requested Output
+                </span>
+                <p className="text-slate-900 font-bold">
+                  {formData.requestedQuantity || 0} Units
+                </p>
               </div>
               <div>
-                <span className="text-slate-400 block font-bold text-[10px] uppercase tracking-wider mb-0.5">Target SLA Timeline</span>
-                <p className="text-slate-900 font-bold">{formData.requestedDeliveryDate || "Unassigned"}</p>
+                <span className="text-slate-400 block font-bold text-[10px] uppercase tracking-wider mb-0.5">
+                  Target SLA Timeline
+                </span>
+                <p className="text-slate-900 font-bold">
+                  {new Date(formData.requestedDeliveryDate).toLocaleDateString(
+                    "vi-VN",
+                  ) || "Unassigned"}
+                </p>
               </div>
             </div>
 
-            {formData.specifications.some(s => s.name.trim()) && (
+            {formData.specifications.some((s) => s.name.trim()) && (
               <div className="pt-1">
-                <span className="text-slate-400 block font-bold text-[10px] uppercase tracking-wider mb-1">Verified Structural Specs</span>
+                <span className="text-slate-400 block font-bold text-[10px] uppercase tracking-wider mb-1">
+                  Verified Structural Specs
+                </span>
                 <div className="max-h-24 overflow-y-auto bg-slate-50 p-3 rounded-lg border border-slate-100 space-y-1.5 text-xs">
-                  {formData.specifications.map((spec) => (
-                    spec.name.trim() && (
-                      <div key={spec.id} className="flex justify-between border-b border-slate-200/40 pb-1 last:border-b-0 last:pb-0">
-                        <span className="text-slate-400 font-semibold">{spec.name}:</span>
-                        <span className="text-slate-900 font-bold">{spec.value || "—"}</span>
-                      </div>
-                    )
-                  ))}
+                  {formData.specifications.map(
+                    (spec) =>
+                      spec.name.trim() && (
+                        <div
+                          key={spec.id}
+                          className="flex justify-between border-b border-slate-200/40 pb-1 last:border-b-0 last:pb-0"
+                        >
+                          <span className="text-slate-400 font-semibold">
+                            {spec.name}:
+                          </span>
+                          <span className="text-slate-900 font-bold">
+                            {spec.value || "—"}
+                          </span>
+                        </div>
+                      ),
+                  )}
                 </div>
               </div>
             )}
@@ -389,9 +454,15 @@ const CreateDemandPage = () => {
               "
             >
               {isPending ? (
-                <Loader2 className="w-3.5 h-3.5 text-white animate-spin" strokeWidth={2.5} />
+                <Loader2
+                  className="w-3.5 h-3.5 text-white animate-spin"
+                  strokeWidth={2.5}
+                />
               ) : (
-                <CheckCircle2 className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+                <CheckCircle2
+                  className="w-3.5 h-3.5 text-white"
+                  strokeWidth={2.5}
+                />
               )}
               <span>{isPending ? "Broadcasting..." : "Broadcast Demand"}</span>
             </button>

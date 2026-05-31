@@ -79,7 +79,7 @@ export class ProcurementContractService {
         input.supplier,
         this.toUint16(input.allocationScore),
         this.toBigInt(input.allocatedQuantity),
-        this.toBigInt(input.estimatedAmount),
+        ethers.parseEther(input.estimatedAmount.toString()), // ETH → wei
       );
 
       const receipt = await tx.wait();

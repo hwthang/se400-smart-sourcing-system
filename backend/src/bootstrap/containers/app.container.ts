@@ -13,6 +13,7 @@ import { supplierRegistrationController } from "./supplier-registration.containe
 import { buyerCriteriaController } from "./buyer-criteria.container";
 
 import { orderController } from "./order.container";
+import { blockchainTransactionController } from "./blockchain-transaction.container";
 
 export const appContainer = {
   controllers: {
@@ -29,5 +30,6 @@ export const appContainer = {
     buyerCriteriaController,
 
     orderController,
+    blockchainTransactionController,
   },
 };

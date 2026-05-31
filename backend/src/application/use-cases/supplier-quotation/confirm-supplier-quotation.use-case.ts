@@ -1,3 +1,4 @@
+import { BlockchainTransaction } from "../../../domain/entities/blockchain-transaction.entity";
 import { SupplierQuotation } from "../../../domain/entities/supplier-quotation.entity";
 import { SupplierRegistration } from "../../../domain/entities/supplier-registration.entity";
 import { SupplierQuotationStatus } from "../../../domain/enums/supplier-quotation-status.enum";
@@ -5,6 +6,7 @@ import { SupplierRegistrationStatus } from "../../../domain/enums/supplier-regis
 import { ProcurementContractService } from "../../../infrastructure/blockchain/services/procurement-contract.service";
 import { ContractMapper } from "../../../infrastructure/persistence/mappers/contract.mapper";
 import { AuthUser } from "../../common/auth-user";
+import { BlockchainTransactionRepository } from "../../repositories/blockchain-transaction.repo";
 import { ContractRepository } from "../../repositories/contract.repo";
 import { SupplierQuotationRepository } from "../../repositories/supplier-quotation.repo";
 import { SupplierRegistrationRepository } from "../../repositories/supplier-registration.repo";
@@ -13,6 +15,7 @@ type ConfirmSupplierQuotationUseCaseRepos = {
   contractRepo: ContractRepository;
   registrationRepo: SupplierRegistrationRepository;
   quotationRepo: SupplierQuotationRepository;
+  transactionRepo: BlockchainTransactionRepository;
 };
 
 type ConfirmSupplierQuotationUseCaseInput = {
@@ -65,6 +68,14 @@ export class ConfirmSupplierQuotationUseCase {
     }
 
     const updatedContract = await this.repos.contractRepo.save(contract);
+
+    const transaction = BlockchainTransaction.create({
+      txHash: input.txHash,
+      contractAddress: input.contractAddress,
+      method: "CONFIRM_QUOTATION",
+      status: data?.status == 1 ? "CONFIRMED" : "FAILED",
+    });
+    await this.repos.transactionRepo.create(transaction);
 
     return ContractMapper.toDto(updatedContract);
   }

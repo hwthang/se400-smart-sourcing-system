@@ -1,7 +1,7 @@
 // components/CreateBuyerCriteriaButton.tsx
 
 import { useState } from "react";
-import { Plus, Info, HelpCircle } from "lucide-react";
+import { Plus, Info } from "lucide-react";
 import Modal from "../../../shared/ui/modal/Modal";
 import { useCreateCriteria } from "../hooks/use-buyer-criteria";
 
@@ -14,48 +14,58 @@ const CreateBuyerCriteriaButton = ({ registration }: Props) => {
 
   const [form, setForm] = useState({
     minPurchaseQuantity: 0,
-    maxAllocationPercent: 0,
+    maxAllocationPercent: "", // Chuyển thành chuỗi để kiểm soát chuỗi nhập từ Regex trực tiếp
   });
 
   const createCriteria = useCreateCriteria();
 
-  // Hàm tính toán hiển thị phần trăm real-time dựa trên số nguyên đang nhập
-  const formatLivePercent = (value: number) => {
-    if (!value || isNaN(value)) return "0.00%";
-    return `${(value / 100).toFixed(2)}%`;
+  // Regex kiểm tra định dạng số thập phân tối đa 2 chữ số sau dấu phẩy (Ví dụ: 0, 12, 45.5, 100.00)
+  const percentRegex = /^(100(\.0{0,2})?|[0-9]{0,2}(\.[0-9]{0,2})?)$/;
+
+  const handlePercentChange = (value: string) => {
+    // Nếu ô nhập trống, cho phép xóa để người dùng nhập mới
+    if (value === "") {
+      setForm((prev) => ({ ...prev, maxAllocationPercent: "" }));
+      return;
+    }
+
+    // Chỉ cập nhật trạng thái nếu chuỗi nhập khớp chính xác với cấu trúc Regex
+    if (percentRegex.test(value)) {
+      setForm((prev) => ({ ...prev, maxAllocationPercent: value }));
+    }
   };
 
   const handleSubmit = async () => {
+    // Chuyển đổi chuỗi phần trăm về dạng float khi gửi lên API backend
+    const finalPercent = parseFloat(form.maxAllocationPercent) || 0;
+
     await createCriteria.mutateAsync({
       registrationId: registration?.id,
       contractId: registration?.contractId,
-      ...form,
+      minPurchaseQuantity: form.minPurchaseQuantity,
+      maxAllocationPercent: finalPercent, 
     });
 
     setOpen(false);
-    // Reset form sau khi submit thành công
-    setForm({ minPurchaseQuantity: 0, maxAllocationPercent: 0 });
+    // Khôi phục trạng thái ban đầu sau khi tác vụ hoàn thành
+    setForm({ minPurchaseQuantity: 0, maxAllocationPercent: "" });
   };
 
   return (
     <>
+      {/* Nút kích hoạt Modal - Chuẩn Premium Primary Button */}
       <button
         onClick={() => setOpen(true)}
-        className="
-          flex items-center gap-2 rounded-md bg-gradient-to-br
-          from-blue-900 via-blue-800 to-indigo-900 px-4 py-2 text-sm
-          font-medium text-white shadow-sm transition-all duration-200
-          hover:shadow-md hover:brightness-110 active:scale-[0.98]
-        "
+        className="flex items-center justify-center gap-2 bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white font-medium px-4 py-2 rounded-md shadow-sm transition-all duration-200 hover:shadow-md hover:brightness-110 active:scale-[0.98] text-sm"
       >
-        <Plus className="w-4 h-4" strokeWidth={2} />
+        <Plus className="w-4 h-4 text-white" strokeWidth={2} />
         <span>Create Criteria</span>
       </button>
 
       <Modal open={open} onClose={() => setOpen(false)} title="Create Buyer Criteria">
         <div className="flex flex-col gap-5">
           
-          {/* MIN PURCHASE QUANTITY */}
+          {/* 1. MIN PURCHASE QUANTITY (Solid Flat Input Field) */}
           <div className="text-left space-y-1.5">
             <label className="text-xs font-bold uppercase tracking-wider text-gray-500">
               Minimum Purchase Quantity
@@ -69,92 +79,51 @@ const CreateBuyerCriteriaButton = ({ registration }: Props) => {
                 setForm((prev) => ({ ...prev, minPurchaseQuantity: val }));
               }}
               placeholder="Enter minimum quantity (e.g., 500)"
-              className="
-                w-full rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 shadow-sm
-                transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-800/10 focus:border-blue-800
-              "
+              className="w-full bg-white text-gray-900 placeholder-gray-500 rounded-md px-4 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-800/20 transition-all"
             />
           </div>
 
-          {/* MAX ALLOCATION PERCENT */}
+          {/* 2. MAX ALLOCATION PERCENT (Direct Input with Regex validation) */}
           <div className="text-left space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1">
-                Max Allocation Percent <span className="text-gray-400 font-normal">(0 - 10000)</span>
-              </label>
-              
-              {/* LIVE CONVERSION BADGE */}
-              <span className="text-sm font-mono font-black text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 shadow-2xs">
-                Preview: {formatLivePercent(form.maxAllocationPercent)}
+            <label className="text-xs font-bold uppercase tracking-wider text-gray-500">
+              Max Allocation Percent (%)
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={form.maxAllocationPercent}
+                onChange={(e) => handlePercentChange(e.target.value)}
+                placeholder="0.00"
+                className="w-full bg-white text-gray-900 placeholder-gray-500 rounded-md pl-4 pr-8 py-2.5 text-sm font-mono shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-800/20 transition-all"
+              />
+              <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-sm font-mono font-bold text-gray-500 pointer-events-none">
+                %
               </span>
             </div>
-
-            <input
-              type="number"
-              min={0}
-              max={10000}
-              value={form.maxAllocationPercent || ""}
-              onChange={(e) => {
-                let val = Number(e.target.value);
-                // Giới hạn cứng trong khoảng từ 0 đến 10000 để bảo vệ Contract
-                if (val > 10000) val = 10000;
-                if (val < 0) val = 0;
-                
-                setForm((prev) => ({
-                  ...prev,
-                  maxAllocationPercent: val,
-                }));
-              }}
-              placeholder="Enter value between 0 and 10000"
-              className="
-                w-full rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-mono text-gray-900 shadow-sm
-                transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-800/10 focus:border-blue-800
-              "
-            />
           </div>
 
-          {/* HINT ĐƯỢC THIẾT KẾ LẠI THEO CHUẨN ĐỐI CHIẾU BLOCKCHAIN */}
-          <div className="rounded-md border border-blue-100 bg-blue-50/40 p-4 text-left space-y-3">
-            <div className="flex items-center gap-2 text-blue-900">
-              <Info className="w-4 h-4 shrink-0" strokeWidth={2} />
+          {/* 3. SYSTEM HINT BLOCK (Borderless Information Block) */}
+          <div className="rounded-md bg-blue-50/50 p-4 text-left space-y-2">
+            <div className="flex items-center gap-2 text-blue-800">
+              <Info className="w-4 h-4 text-current" strokeWidth={2} />
               <p className="text-xs font-bold uppercase tracking-wide">
-                On-Chain Precision Rules
+                Direct Input System
               </p>
             </div>
-            
             <p className="text-xs text-gray-500 leading-relaxed">
-              Smart Contracts count percentages in base basis points ($10000 = 100.00\%$) to avoid precision handling issues with decimals. Refer to this conversion matrix:
+              Please enter the percentage value directly using numbers and a decimal point. The system limits the configuration target to a range from <span className="font-semibold text-gray-900">0.00%</span> up to <span className="font-semibold text-gray-900">100.00%</span>.
             </p>
-
-            {/* BẢNG QUY ĐỔI NHANH */}
-            <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono border-t border-blue-100/70 pt-2.5">
-              <div className="bg-white p-1.5 rounded border border-slate-100">
-                <p className="text-[10px] text-gray-400 uppercase">Input</p>
-                <p className="font-bold text-gray-800 mt-0.5">10000</p>
-                <p className="text-[11px] text-blue-900 font-semibold mt-0.5">100.00%</p>
-              </div>
-              <div className="bg-white p-1.5 rounded border border-slate-100">
-                <p className="text-[10px] text-gray-400 uppercase">Input</p>
-                <p className="font-bold text-gray-800 mt-0.5">2550</p>
-                <p className="text-[11px] text-blue-900 font-semibold mt-0.5">25.50%</p>
-              </div>
-              <div className="bg-white p-1.5 rounded border border-slate-100">
-                <p className="text-[10px] text-gray-400 uppercase">Input</p>
-                <p className="font-bold text-gray-800 mt-0.5">50</p>
-                <p className="text-[11px] text-blue-900 font-semibold mt-0.5">0.50%</p>
-              </div>
-            </div>
           </div>
 
-          {/* ACTIONS */}
-          <div className="flex justify-end gap-2 border-t border-gray-100 pt-4">
+          {/* 4. MODAL INTERACTIONS AREA (Flat Footnote Rules) */}
+          <div className="flex justify-end gap-2 pt-4">
             <button
               type="button"
               onClick={() => {
                 setOpen(false);
-                setForm({ minPurchaseQuantity: 0, maxAllocationPercent: 0 });
+                setForm({ minPurchaseQuantity: 0, maxAllocationPercent: "" });
               }}
-              className="rounded-md px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
+              className="flex items-center justify-center gap-2 bg-white text-blue-800 font-medium px-4 py-2 rounded-md transition-all duration-200 hover:bg-blue-50 active:scale-[0.98] text-sm"
             >
               Cancel
             </button>
@@ -162,12 +131,8 @@ const CreateBuyerCriteriaButton = ({ registration }: Props) => {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={createCriteria.isPending}
-              className="
-                rounded-md bg-gradient-to-br from-blue-900 to-indigo-900 px-5 py-2 text-sm
-                font-medium text-white shadow-sm transition-all hover:brightness-110
-                disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed
-              "
+              disabled={createCriteria.isPending || !form.maxAllocationPercent}
+              className="flex items-center justify-center bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white font-medium px-5 py-2 rounded-md shadow-sm transition-all duration-200 hover:brightness-110 active:scale-[0.98] text-sm disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:pointer-events-none"
             >
               {createCriteria.isPending ? "Creating..." : "Confirm"}
             </button>

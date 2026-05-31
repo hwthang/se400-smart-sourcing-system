@@ -1,9 +1,12 @@
+import { BlockchainTransaction } from "../../../domain/entities/blockchain-transaction.entity";
 import { ProcurementContractService } from "../../../infrastructure/blockchain/services/procurement-contract.service";
 import { ContractMapper } from "../../../infrastructure/persistence/mappers/contract.mapper";
+import { BlockchainTransactionRepository } from "../../repositories/blockchain-transaction.repo";
 import { ContractRepository } from "../../repositories/contract.repo";
 
 type DepositUseCaseRepos = {
   contractRepo: ContractRepository;
+  transactionRepo: BlockchainTransactionRepository;
 };
 
 type DepositUseCaseInput = {
@@ -25,10 +28,17 @@ export class DepositUseCase {
       input.contractAddress,
     );
     if (!contract) throw new Error();
-    
+
     contract.markFunded();
 
     const updatedContract = await this.repos.contractRepo.save(contract);
+    const transaction = BlockchainTransaction.create({
+      txHash: input.txHash,
+      contractAddress: input.contractAddress,
+      method: "DEPOSIT",
+      status: data?.status == 1 ? "CONFIRMED" : "FAILED",
+    });
+    await this.repos.transactionRepo.create(transaction);
 
     return ContractMapper.toDto(updatedContract);
   }

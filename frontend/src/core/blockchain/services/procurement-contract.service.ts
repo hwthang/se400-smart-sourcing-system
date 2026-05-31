@@ -1,8 +1,10 @@
 import { ethers, type Signer } from "ethers";
 import { ContractFactoryService } from "./contract-factory.service";
+import { PrecisionHelper } from "../../../shared/utils/precision-helper";
 
 export class ProcurementContractService {
   private readonly contract: ethers.Contract;
+  private readonly provider: ethers.Provider;
 
   constructor(
     private readonly contractAddress: string,
@@ -12,6 +14,8 @@ export class ProcurementContractService {
       this.contractAddress,
       signer,
     );
+
+    this.provider = signer.provider!;
   }
 
   // =========================================================
@@ -55,18 +59,18 @@ export class ProcurementContractService {
 
   // renamed: submitSupplierQuotation → confirmSupplierQuotation
   async confirmSupplierQuotation(
-    unitPrice: bigint,
-    minSupplyQuantity: bigint,
-    maxSupplyQuantity: bigint,
+    unitPrice: number,
+    minSupplyQuantity: number,
+    maxSupplyQuantity: number,
     maxDefectRate: number,
     maxLeadTimeDays: number,
   ): Promise<string> {
     const tx = await this.contract.confirmSupplierQuotation(
-      unitPrice,
-      minSupplyQuantity,
-      maxSupplyQuantity,
-      maxDefectRate,
-      maxLeadTimeDays,
+      ethers.parseEther(unitPrice.toFixed(4)),
+      BigInt(minSupplyQuantity),
+      BigInt(maxSupplyQuantity),
+      PrecisionHelper.toBasicPointFromPercentage(maxDefectRate),
+      BigInt(maxLeadTimeDays),
     );
 
     await tx.wait();
@@ -214,5 +218,73 @@ export class ProcurementContractService {
 
   async getOrder(supplier: string) {
     return this.contract.orders(supplier);
+  }
+
+  async getTransactionDetail(txHash: string) {
+    const tx = await this.provider.getTransaction(txHash);
+
+    if (!tx) {
+      throw new Error("Transaction not found");
+    }
+
+    const receipt = await this.provider.getTransactionReceipt(txHash);
+
+    
+    let method: string | null = null;
+    let args: any[] = [];
+
+    try {
+      const parsed = this.contract.interface.parseTransaction({
+        data: tx.data,
+        value: tx.value,
+      });
+console.log(tx)
+      method = parsed?.name ?? null;
+      args = parsed?.args ? [...parsed.args] : [];
+    } catch {}
+
+    const events: any[] = [];
+
+    if (receipt) {
+      for (const log of receipt.logs) {
+        try {
+          const parsed = this.contract.interface.parseLog(log);
+
+          events.push({
+            name: parsed?.name,
+            args: parsed?.args ? [...parsed.args] : [],
+          });
+        } catch {}
+      }
+    }
+
+    return {
+      transaction: {
+        hash: tx.hash,
+        from: tx.from,
+        to: tx.to,
+        value: ethers.formatEther(tx.value),
+        nonce: tx.nonce,
+        gasLimit: tx.gasLimit.toString(),
+        gasPrice: tx.gasPrice?.toString(),
+      },
+
+      receipt: receipt
+        ? {
+            blockNumber: receipt.blockNumber,
+            status: receipt.status === 1 ? "CONFIRMED" : "FAILED",
+            gasUsed: receipt.gasUsed.toString(),
+            cumulativeGasUsed: receipt.cumulativeGasUsed.toString(),
+            contractAddress: receipt.contractAddress,
+          }
+        : null,
+
+      decodedInput: {
+        method,
+        args,
+      },
+
+      events,
+    };
   }
 }

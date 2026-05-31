@@ -162,7 +162,7 @@ const ConfirmDemandButton = ({ demand }: Props) => {
               <div className="text-right">
                 <p className="text-sm font-bold text-gray-900">
                   {deliveryDateString
-                    ? new Date(deliveryDateString).toLocaleDateString()
+                    ? new Date(deliveryDateString).toLocaleDateString("vi-VN")
                     : "N/A"}
                 </p>
                 <p className="text-[10px] font-mono text-slate-400">
