@@ -1,5 +1,6 @@
 // reject-quotation.use-case.ts
 
+import { SupplierQuotationModel } from "../../../infrastructure/persistence/schemas/supplier-quotation.schema";
 import { AppError } from "../../../presentation/errors/app.error";
 
 import { AuthUser } from "../../common/auth-user";
@@ -23,99 +24,61 @@ type RejectQuotationInput = {
 };
 
 export class RejectQuotationUseCase {
-  constructor(
-    private readonly repos: RejectQuotationUseCaseRepos,
-  ) {}
+  constructor(private readonly repos: RejectQuotationUseCaseRepos) {}
 
-  async execute(
-    input: RejectQuotationInput,
-  ) {
-    const quotation =
-      await this.repos.quotationRepo.findById(
-        input.quotationId,
-      );
+  async execute(input: RejectQuotationInput) {
+    const quotation = await this.repos.quotationRepo.findById(
+      input.quotationId,
+    );
 
     if (!quotation) {
-      throw new AppError(
-        "Quotation not found",
-        404,
-      );
+      throw new AppError("Quotation not found", 404);
     }
 
-    const registration =
-      await this.repos.registrationRepo.findById(
-        quotation.registrationId,
-      );
+    const registration = await this.repos.registrationRepo.findById(
+      quotation.registrationId,
+    );
+
+    await SupplierQuotationModel.deleteOne({ _id: quotation.id });
 
     if (!registration) {
-      throw new AppError(
-        "Supplier registration not found",
-        404,
-      );
+      throw new AppError("Supplier registration not found", 404);
     }
 
-    const contract =
-      await this.repos.contractRepo.findById(
-        registration.contractId,
-      );
+    const contract = await this.repos.contractRepo.findById(
+      registration.contractId,
+    );
 
     if (!contract) {
-      throw new AppError(
-        "Contract not found",
-        404,
-      );
+      throw new AppError("Contract not found", 404);
     }
 
-    const demand =
-      await this.repos.demandRepo.findById(
-        contract.demandId,
-      );
+    const demand = await this.repos.demandRepo.findById(contract.demandId);
 
     if (!demand) {
-      throw new AppError(
-        "Demand not found",
-        404,
-      );
+      throw new AppError("Demand not found", 404);
     }
 
-    if (
-      demand.assignedEmployeeId !==
-      input.authUser.id
-    ) {
-      throw new AppError(
-        "Forbidden",
-        403,
-      );
+    if (demand.assignedEmployeeId !== input.authUser.id) {
+      throw new AppError("Forbidden", 403);
     }
 
     if (!input.reason?.trim()) {
-      throw new AppError(
-        "Reject reason is required",
-        400,
-      );
+      throw new AppError("Reject reason is required", 400);
     }
 
     try {
-      quotation.reject(
-        input.reason,
-      );
+      quotation.reject(input.reason);
 
-      await this.repos.quotationRepo.save(
-        quotation,
-      );
+      await this.repos.quotationRepo.save(quotation);
 
       return quotation;
     } catch (error) {
       if (error instanceof Error) {
-        throw new AppError(
-          error.message,
-          400,
-        );
+        throw new AppError(error.message, 400);
       }
 
-      throw new AppError(
-        "Failed to reject quotation",
-      );
+      throw new AppError("Failed to reject quotation");
     }
   }
 }

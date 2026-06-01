@@ -7,6 +7,9 @@ import { ContractRepository } from "../../repositories/contract.repo";
 import { DemandRepository } from "../../repositories/demand.repo";
 import { SupplierQuotationRepository } from "../../repositories/supplier-quotation.repo";
 import { SupplierQuotationStatus } from "../../../domain/enums/supplier-quotation-status.enum";
+import { SupplierRegistration } from "../../../domain/entities/supplier-registration.entity";
+import SupplierRegistrationModel from "../../../infrastructure/persistence/schemas/supplier-registration.schema";
+import { SupplierRegistrationStatus } from "../../../domain/enums/supplier-registration-status.enum";
 
 type CloseSupplierRegistrationRepos = {
   contractRepo: ContractRepository;

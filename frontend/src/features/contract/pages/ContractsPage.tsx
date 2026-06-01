@@ -365,7 +365,7 @@ const ContractsPage = () => {
                               Delay / Day:
                             </span>
                             <span className="text-rose-700 font-bold">
-                              {contract.penaltyRates?.delay || 0} wei
+                              {contract.penaltyRates?.delay || 0} ETH
                             </span>
                           </div>
                           <div className="flex justify-between max-w-[120px]">
